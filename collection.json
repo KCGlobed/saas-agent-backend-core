@@ -1,0 +1,395 @@
+{
+  "info": {
+    "_postman_id": "12dcd7ee-e2f2-43c7-85f9-29df0deefc69",
+    "name": "GCC School",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "39795930",
+    "_collection_link": "https://go.postman.co/collection/39795930-12dcd7ee-e2f2-43c7-85f9-29df0deefc69?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Manage websites",
+      "item": [
+        {
+          "name": "Get Student Query Page Listing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{GCC_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "email",
+                "value": "",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{GCC_Base_url}}/api/students/query_page_list?pageSize=2",
+              "host": [
+                "{{GCC_Base_url}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "query_page_list"
+              ],
+              "query": [
+                {
+                  "key": "pageSize",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Data Page Listing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{GCC_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "email",
+                "value": "",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{GCC_Base_url}}/api/students/studentdata_page_list",
+              "host": [
+                "{{GCC_Base_url}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "studentdata_page_list"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Data Page Listing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "email",
+                "value": "",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{GCC_Base_url}}/api/students/studentpayment_page_list",
+              "host": [
+                "{{GCC_Base_url}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "studentpayment_page_list"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Campus Page Listing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{GCC_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "email",
+                "value": "",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{GCC_Base}}/api/students/studentcampus_page_list",
+              "host": [
+                "{{GCC_Base}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "studentcampus_page_list"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get faculty Campus Page Listing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{GCC_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "email",
+                "value": "",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{GCC_Base}}/api/students/facultycampus_page_list",
+              "host": [
+                "{{GCC_Base}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "facultycampus_page_list"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Manage careers",
+      "item": [
+        {
+          "name": "Get Student Query Page Listing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{GCC_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "email",
+                "value": "",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{GCC_Base}}/api/career/careerapplication_page_list?pageSize=2",
+              "host": [
+                "{{GCC_Base}}"
+              ],
+              "path": [
+                "api",
+                "career",
+                "careerapplication_page_list"
+              ],
+              "query": [
+                {
+                  "key": "pageSize",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Data Page Listing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{GCC_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "email",
+                "value": "",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{GCC_Base}}/api/career/partners_page_list",
+              "host": [
+                "{{GCC_Base}}"
+              ],
+              "path": [
+                "api",
+                "career",
+                "partners_page_list"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "test_bucket",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{GCC_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "email",
+                "value": "",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{GCC_Base}}/api/students/test",
+              "host": [
+                "{{GCC_Base}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "test"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "test_bucket excel",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{GCC_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "email",
+                "value": "",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{GCC_Base}}/api/students/test_excel",
+              "host": [
+                "{{GCC_Base}}"
+              ],
+              "path": [
+                "api",
+                "students",
+                "test_excel"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "GCC_Base_url",
+      "value": ""
+    },
+    {
+      "key": "GCC_Token",
+      "value": ""
+    },
+    {
+      "key": "GCC_Base",
+      "value": ""
+    }
+  ]
+}
