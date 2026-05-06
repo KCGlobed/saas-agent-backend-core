@@ -2,12 +2,11 @@ import os
 import chromadb
 from chromadb.config import Settings
 
-CHROMA_HOST = os.getenv("CHROMA_HOST", "localhost")
-CHROMA_PORT = int(os.getenv("CHROMA_PORT", 8000))
+# Instead of connecting to a remote server, we run Chroma directly in the FastAPI process
+CHROMA_DATA_PATH = os.getenv("CHROMA_DATA_PATH", "./chroma_data")
 
-chroma_client = chromadb.HttpClient(
-    host=CHROMA_HOST, 
-    port=CHROMA_PORT,
+chroma_client = chromadb.PersistentClient(
+    path=CHROMA_DATA_PATH,
     settings=Settings(allow_reset=True)
 )
 
