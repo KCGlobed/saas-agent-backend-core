@@ -47,11 +47,11 @@ def extract_text_from_url(url: str) -> str:
     text = soup.get_text(separator=' ', strip=True)
     return text
 
-def process_and_store(text: str, project_id: str, source: str, filename: str, api_key: Optional[str] = None):
+def process_and_store(text: str, project_id: str, source: str, filename: str, api_key: Optional[str] = None, chunk_size: int = 1000, chunk_overlap: int = 100):
     # 1. Chunk text
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=100,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
         length_function=len
     )
     chunks = text_splitter.split_text(text)

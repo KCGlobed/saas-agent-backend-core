@@ -77,6 +77,8 @@ exports.ingestFiles = async (req, res) => {
       const formData = new FormData();
       formData.append('projectId', id);
       if (apiKey) formData.append('apiKey', apiKey);
+      if (project.config?.chunkSize) formData.append('chunkSize', project.config.chunkSize);
+      if (project.config?.chunkOverlap) formData.append('chunkOverlap', project.config.chunkOverlap);
       const blob = new Blob([file.buffer], { type: file.mimetype });
       formData.append('file', blob, file.originalname);
 
@@ -128,7 +130,13 @@ exports.ingestUrl = async (req, res) => {
     const resp = await fetch(`${FASTAPI_URL}/ingest/url`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ projectId: id, url, apiKey })
+      body: JSON.stringify({ 
+        projectId: id, 
+        url, 
+        apiKey,
+        chunkSize: project.config?.chunkSize || 1000,
+        chunkOverlap: project.config?.chunkOverlap || 100
+      })
     });
     const data = await resp.json();
     if (!resp.ok) {
@@ -180,6 +188,8 @@ exports.ingestText = async (req, res) => {
     const formData = new FormData();
     formData.append('projectId', id);
     if (apiKey) formData.append('apiKey', apiKey);
+    if (project.config?.chunkSize) formData.append('chunkSize', project.config.chunkSize);
+    if (project.config?.chunkOverlap) formData.append('chunkOverlap', project.config.chunkOverlap);
     const blob = new Blob([textBuffer], { type: 'text/plain' });
     formData.append('file', blob, filename);
 

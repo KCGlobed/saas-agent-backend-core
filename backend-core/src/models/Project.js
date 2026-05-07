@@ -16,7 +16,9 @@ const projectSchema = new mongoose.Schema({
     welcomeMessage: { type: String, default: 'Hello! How can I assist you today?' },
     poweredByText: { type: String, default: 'Powered by AI' },
     requireLeadForm: { type: Boolean, default: false },
-    leadFormFields: { type: [String], default: ['name', 'email'] }
+    leadFormFields: { type: [String], default: ['name', 'email'] },
+    chunkSize: { type: Number, default: 1000 },
+    chunkOverlap: { type: Number, default: 100 }
   }
 }, { timestamps: true });
 

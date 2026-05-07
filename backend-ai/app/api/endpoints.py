@@ -14,26 +14,28 @@ class UrlIngestRequest(BaseModel):
     projectId: str
     url: str
     apiKey: Optional[str] = None
+    chunkSize: int = 1000
+    chunkOverlap: int = 100
 
 class ChatRequest(BaseModel):
     projectId: str
     query: str
     apiKey: Optional[str] = None
 
-def background_ingest_file(file_content: bytes, filename: str, project_id: str, job_id: str, api_key: str = None):
+def background_ingest_file(file_content: bytes, filename: str, project_id: str, job_id: str, api_key: str = None, chunk_size: int = 1000, chunk_overlap: int = 100):
     try:
         ingestion_status[job_id] = "processing"
         text = extract_text_from_file(file_content, filename)
-        chunks_stored = process_and_store(text, project_id, source="file", filename=filename, api_key=api_key)
+        chunks_stored = process_and_store(text, project_id, source="file", filename=filename, api_key=api_key, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         ingestion_status[job_id] = f"completed: {chunks_stored} chunks stored"
     except Exception as e:
         ingestion_status[job_id] = f"failed: {str(e)}"
 
-def background_ingest_url(url: str, project_id: str, job_id: str, api_key: str = None):
+def background_ingest_url(url: str, project_id: str, job_id: str, api_key: str = None, chunk_size: int = 1000, chunk_overlap: int = 100):
     try:
         ingestion_status[job_id] = "processing"
         text = extract_text_from_url(url)
-        chunks_stored = process_and_store(text, project_id, source="url", filename=url, api_key=api_key)
+        chunks_stored = process_and_store(text, project_id, source="url", filename=url, api_key=api_key, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         ingestion_status[job_id] = f"completed: {chunks_stored} chunks stored"
     except Exception as e:
         ingestion_status[job_id] = f"failed: {str(e)}"
@@ -43,6 +45,8 @@ async def ingest_file(
     background_tasks: BackgroundTasks,
     projectId: str = Form(...),
     apiKey: Optional[str] = Form(None),
+    chunkSize: int = Form(1000),
+    chunkOverlap: int = Form(100),
     file: UploadFile = File(...)
 ):
     job_id = str(uuid.uuid4())
@@ -56,7 +60,9 @@ async def ingest_file(
         file.filename, 
         projectId, 
         job_id,
-        apiKey
+        apiKey,
+        chunkSize,
+        chunkOverlap
     )
     
     return {"jobId": job_id, "status": "pending"}
@@ -74,7 +80,9 @@ async def ingest_url(
         req.url,
         req.projectId,
         job_id,
-        req.apiKey
+        req.apiKey,
+        req.chunkSize,
+        req.chunkOverlap
     )
     
     return {"jobId": job_id, "status": "pending"}
