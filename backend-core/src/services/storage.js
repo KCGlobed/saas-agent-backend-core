@@ -2,23 +2,25 @@ const { Storage } = require('@google-cloud/storage');
 const path = require('path');
 
 const BUCKET_NAME = process.env.GCS_BUCKET_NAME;
-const GCS_ENABLED = !!BUCKET_NAME && !!process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const GCS_ENABLED = !!BUCKET_NAME;
 
 let storage = null;
 let bucket = null;
 
 if (GCS_ENABLED) {
   try {
-    storage = new Storage({
-      keyFilename: path.resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS)
-    });
+    const options = {};
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      options.keyFilename = path.resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS);
+    }
+    storage = new Storage(options);
     bucket = storage.bucket(BUCKET_NAME);
     console.log(`[GCS] Storage initialized with bucket: ${BUCKET_NAME}`);
   } catch (err) {
     console.warn('[GCS] Failed to initialize storage:', err.message);
   }
 } else {
-  console.warn('[GCS] GCS_BUCKET_NAME or GOOGLE_APPLICATION_CREDENTIALS not set. Files will NOT be persisted to GCS.');
+  console.warn('[GCS] GCS_BUCKET_NAME not set. Files will NOT be persisted to GCS.');
 }
 
 /**
