@@ -10,9 +10,16 @@ let bucket = null;
 if (GCS_ENABLED) {
   try {
     const options = {};
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      options.keyFilename = path.resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS);
+    
+    // Explicitly use the local serviceAccount.json ONLY in non-production (localhost) environments
+    if (process.env.NODE_ENV !== 'production') {
+      const localKeyPath = path.resolve(process.cwd(), 'serviceAccount.json');
+      console.log('[GCS] Running locally. Using local serviceAccount.json for authentication.');
+      options.keyFilename = localKeyPath;
+    } else {
+      console.log('[GCS] Running in production. Using automatic Cloud Run authentication.');
     }
+    
     storage = new Storage(options);
     bucket = storage.bucket(BUCKET_NAME);
     console.log(`[GCS] Storage initialized with bucket: ${BUCKET_NAME}`);
