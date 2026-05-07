@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { API_BASE_URL } from './main';
 
 // Simple inline markdown renderer - handles bold, italic, bullet lists, and line breaks
 const renderMarkdown = (text: string) => {
@@ -103,7 +104,7 @@ const ChatWidget = ({ config }: { config: any }) => {
     e.preventDefault();
     setIsSubmittingLead(true);
     try {
-      await fetch(`http://localhost:4000/api/leads`, {
+      await fetch(`${API_BASE_URL}/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: config.projectId, name: leadForm.name, email: leadForm.email })
@@ -126,7 +127,7 @@ const ChatWidget = ({ config }: { config: any }) => {
     setIsLoading(true);
 
     try {
-      const res = await fetch('http://localhost:4000/api/chat/generate', {
+      const res = await fetch(`${API_BASE_URL}/chat/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: config.projectId, prompt: userMsg })

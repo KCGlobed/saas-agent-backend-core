@@ -8,6 +8,17 @@ declare global {
   }
 }
 
+// Dynamically determine the backend URL based on where this script is hosted
+export let API_BASE_URL = 'http://localhost:4000/api';
+if (document.currentScript && (document.currentScript as HTMLScriptElement).src) {
+  try {
+    const url = new URL((document.currentScript as HTMLScriptElement).src);
+    API_BASE_URL = `${url.origin}/api`;
+  } catch (e) {
+    console.error('Failed to parse script URL', e);
+  }
+}
+
 const initWidget = async () => {
   const rootElement = document.getElementById('chat-widget-root');
   if (!rootElement) return;
@@ -21,7 +32,7 @@ const initWidget = async () => {
   // Fetch config from backend
   let config = { projectId, primaryColor: '#007bff', requireLeadForm: false, leadFormFields: ['name', 'email'] };
   try {
-    const res = await fetch(`http://localhost:4000/api/widget/${projectId}/config`);
+    const res = await fetch(`${API_BASE_URL}/widget/${projectId}/config`);
     if (res.ok) {
       const data = await res.json();
       config = { ...config, ...data.config };
