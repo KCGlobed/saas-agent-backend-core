@@ -19,6 +19,8 @@ if (GCS_ENABLED) {
       options.keyFilename = localKeyPath;
     } else {
       console.log('[GCS] Running in Cloud Run. Using automatic Cloud Run authentication.');
+      // Prevent the underlying Google SDK from accidentally using a bad environment variable
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
     }
     
     storage = new Storage(options);
