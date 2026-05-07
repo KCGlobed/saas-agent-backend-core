@@ -11,13 +11,14 @@ if (GCS_ENABLED) {
   try {
     const options = {};
     
-    // Explicitly use the local serviceAccount.json ONLY in non-production (localhost) environments
-    if (process.env.NODE_ENV !== 'production') {
+    // Explicitly use the local serviceAccount.json ONLY if we are NOT in Cloud Run
+    // Cloud Run automatically sets the K_SERVICE environment variable.
+    if (!process.env.K_SERVICE) {
       const localKeyPath = path.resolve(process.cwd(), 'serviceAccount.json');
-      console.log('[GCS] Running locally. Using local serviceAccount.json for authentication.');
+      console.log('[GCS] Running locally (no K_SERVICE). Using local serviceAccount.json.');
       options.keyFilename = localKeyPath;
     } else {
-      console.log('[GCS] Running in production. Using automatic Cloud Run authentication.');
+      console.log('[GCS] Running in Cloud Run. Using automatic Cloud Run authentication.');
     }
     
     storage = new Storage(options);
