@@ -1,1 +1,15 @@
-node_modules
+/backend-core/node_modules
+/backend-core/.env
+/backend-core/.gitignore
+
+/backend-ai/venv
+/backend-ai/.env
+/backend-ai/.gitignore
+
+/frontend-admin/node_modules
+/frontend-admin/.env
+/frontend-admin/.gitignore
+
+/widget-sdk/node_modules
+/widget-sdk/.env
+/widget-sdk/.gitignore

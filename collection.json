@@ -1,0 +1,120 @@
+{
+  "base_url": "{{GCC_Base_url}}",
+  "auth": {
+    "type": "bearer",
+    "token_env": "GCC_Token"
+  },
+  "apis": [
+    {
+      "name": "get_student_query_pages",
+      "description": "Fetch student query page listing from the student query module.",
+      "purpose": "Use when the user asks about student queries, query queue, or query pages (not dossiers or payments).",
+      "endpoint": "/api/students/query_page_list",
+      "method": "GET",
+      "query_params": {
+        "pageSize": {
+          "type": "number",
+          "default": 10,
+          "description": "Page size for pagination"
+        }
+      }
+    },
+    {
+      "name": "get_student_data_pages",
+      "description": "Fetch student data page listing (core student profile / data grids).",
+      "purpose": "Use when the user asks for student data listings, student records table, or profile data pages.",
+      "endpoint": "/api/students/studentdata_page_list",
+      "method": "GET",
+      "query_params": {}
+    },
+    {
+      "name": "get_student_dossier_pages",
+      "description": "Fetch student dossier listing pages (case files / dossier bundles).",
+      "purpose": "Use when the user asks for student dossiers, dossier lists, or dossiers created or updated on a date (e.g. today). Pass createdFrom/createdTo as YYYY-MM-DD when they mention a day or range.",
+      "endpoint": "/api/students/dossier_page_list",
+      "method": "GET",
+      "query_params": {
+        "pageSize": {
+          "type": "number",
+          "default": 50,
+          "description": "Rows per page"
+        },
+        "createdFrom": {
+          "type": "string",
+          "description": "Inclusive start date filter on created date (ISO YYYY-MM-DD)"
+        },
+        "createdTo": {
+          "type": "string",
+          "description": "Inclusive end date filter on created date (ISO YYYY-MM-DD). For 'today', set both createdFrom and createdTo to today's date."
+        }
+      }
+    },
+    {
+      "name": "get_student_payment_pages",
+      "description": "Fetch student payment page listing.",
+      "purpose": "Use when the user asks about payments, fees, invoices, or billing pages for students.",
+      "endpoint": "/api/students/studentpayment_page_list",
+      "method": "GET",
+      "query_params": {}
+    },
+    {
+      "name": "get_student_campus_pages",
+      "description": "Fetch student campus page listing.",
+      "purpose": "Use when the user asks about student campus assignments or campus-related student pages.",
+      "endpoint": "/api/students/studentcampus_page_list",
+      "method": "GET",
+      "query_params": {},
+      "base_override": "{{GCC_Base}}"
+    },
+    {
+      "name": "get_faculty_campus_pages",
+      "description": "Fetch faculty campus page listing.",
+      "purpose": "Use when the user asks about faculty on campus or faculty campus listings.",
+      "endpoint": "/api/students/facultycampus_page_list",
+      "method": "GET",
+      "query_params": {},
+      "base_override": "{{GCC_Base}}"
+    },
+    {
+      "name": "get_career_applications",
+      "description": "Fetch career application listing.",
+      "purpose": "Use when the user asks about career applications, applicants, or job application lists.",
+      "endpoint": "/api/career/careerapplication_page_list",
+      "method": "GET",
+      "query_params": {
+        "pageSize": {
+          "type": "number",
+          "default": 10
+        }
+      },
+      "base_override": "{{GCC_Base}}"
+    },
+    {
+      "name": "get_career_partners",
+      "description": "Fetch career partners listing.",
+      "purpose": "Use when the user asks about career partners or employer partners.",
+      "endpoint": "/api/career/partners_page_list",
+      "method": "GET",
+      "query_params": {},
+      "base_override": "{{GCC_Base}}"
+    },
+    {
+      "name": "test_students",
+      "description": "Test students API (smoke test).",
+      "purpose": "Use only for connectivity checks or when explicitly asked to hit the test students endpoint.",
+      "endpoint": "/api/students/test",
+      "method": "GET",
+      "query_params": {},
+      "base_override": "{{GCC_Base}}"
+    },
+    {
+      "name": "test_students_excel",
+      "description": "Test students excel export API.",
+      "purpose": "Use when the user explicitly wants the test Excel export endpoint.",
+      "endpoint": "/api/students/test_excel",
+      "method": "GET",
+      "query_params": {},
+      "base_override": "{{GCC_Base}}"
+    }
+  ]
+}
