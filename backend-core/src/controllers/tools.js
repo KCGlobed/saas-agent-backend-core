@@ -21,27 +21,30 @@ exports.parseTextToApi = async (req, res) => {
 
     const apiKey = apiKeyDoc.getDecryptedKey();
 
-    const systemPrompt = `You are an expert API schema generator. Your job is to parse raw natural language descriptions of API endpoints and convert them into a strict JSON array of API definitions.
+    const systemPrompt = `You are an expert API schema generator and Natural Language Processing (NLP) optimizer. Your job is to parse raw natural language descriptions of API endpoints and convert them into a highly intelligent, structured JSON array of tool definitions for an AI agent.
 
-You MUST output ONLY valid JSON. Do not include markdown code blocks like \`\`\`json or any other text. Output exactly the array.
+To ensure maximum accuracy and dynamic query routing by LLM agents, you MUST optimize the generated text using advanced semantic enrichment:
 
-Each object in the array MUST have the following structure:
+Each object in the array MUST adhere strictly to this JSON format:
 {
   "name": "a_snake_case_function_name",
-  "description": "Short description of what the endpoint does.",
-  "purpose": "Instructions for an AI agent on when to use this tool, what filters exist, and how to format the output.",
-  "endpoint": "The URL path, e.g., /api/payments",
-  "method": "GET or POST",
+  "description": "Highly descriptive explanation of what data this endpoint retrieves or modifies. Write using active, semantically rich language so that AI routers can instantly match user intents (synonyms, variations) to this specific tool.",
+  "purpose": "CRITICAL NLP INSTRUCTIONS FOR AGENT: Write precise guidelines instructing an AI agent exactly when to invoke this tool, what implicit user intents it handles, how to map filters correctly, and how to beautifully present the output (e.g., Markdown tables, lists) for the end-user.",
+  "endpoint": "The relative URL path, e.g., /api/payments",
+  "method": "GET, POST, PUT, or DELETE",
   "query_params": {
     "param_name": {
-      "type": "string or number or boolean",
-      "description": "What this param does"
+      "type": "string, number, or boolean",
+      "description": "Explicit description of what this parameter does, its required formats (e.g. ISO 'YYYY-MM-DD' for dates), and semantic mapping context."
     }
   }
 }
 
-If the user does not provide query parameters, "query_params" should be an empty object {}.
-If the user provides multiple endpoints, create an object for each in the array.`;
+CRITICAL INSTRUCTIONS:
+- Explicitly tell the agent in the 'purpose' field to parse user inputs (such as relative dates like 'today') and map them to query params in correct formats.
+- If query parameters are omitted in prompt but clearly available based on the endpoint name (like page size or page number), intelligently infer and define them with clear descriptions.
+- If multiple endpoints are provided in text, generate an object for each in the output array.
+- ALWAYS output ONLY a valid JSON array. Do NOT surround it in markdown block \`\`\`json.`;
 
     const response = await LLMClient.generateResponse({
       provider: project.config.provider,
@@ -78,5 +81,77 @@ If the user provides multiple endpoints, create an object for each in the array.
   } catch (error) {
     console.error('parseTextToApi error:', error);
     res.status(500).json({ error: 'Server error parsing API text.' });
+  }
+};
+
+exports.addToolsToProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { apis } = req.body; // Can accept a single API object or an array of API objects
+
+    if (!apis) {
+      return res.status(400).json({ error: 'No apis configuration payload provided.' });
+    }
+
+    const project = await Project.findOne({ _id: id, user: req.user.id });
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    if (!project.config) project.config = {};
+    if (!project.config.apiCollection) {
+      project.config.apiCollection = { apis: [] };
+    }
+    if (!Array.isArray(project.config.apiCollection.apis)) {
+      project.config.apiCollection.apis = [];
+    }
+
+    const itemsToAdd = Array.isArray(apis) ? apis : [apis];
+
+    for (const item of itemsToAdd) {
+      if (item && item.name) {
+        // Deduplicate: Pull out existing API by same name to prevent duplicates
+        project.config.apiCollection.apis = project.config.apiCollection.apis.filter(
+          (a) => a.name !== item.name
+        );
+        // Push new config
+        project.config.apiCollection.apis.push(item);
+      }
+    }
+
+    // Deep modification alert for Mongoose Mixed types
+    project.markModified('config.apiCollection');
+    await project.save();
+
+    res.json({
+      message: 'Tool configuration added/updated successfully.',
+      apiCollection: project.config.apiCollection
+    });
+  } catch (error) {
+    console.error('addToolsToProject error:', error);
+    res.status(500).json({ error: 'Server error persisting tool configuration.' });
+  }
+};
+
+exports.removeToolFromProject = async (req, res) => {
+  try {
+    const { id, name } = req.params;
+
+    const project = await Project.findOne({ _id: id, user: req.user.id });
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    if (project.config?.apiCollection?.apis) {
+      project.config.apiCollection.apis = project.config.apiCollection.apis.filter(
+        (a) => a.name !== name
+      );
+      project.markModified('config.apiCollection');
+      await project.save();
+    }
+
+    res.json({
+      message: `Tool '${name}' successfully removed.`,
+      apiCollection: project.config?.apiCollection || { apis: [] }
+    });
+  } catch (error) {
+    console.error('removeToolFromProject error:', error);
+    res.status(500).json({ error: 'Server error deleting tool configuration.' });
   }
 };
