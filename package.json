@@ -1,0 +1,30 @@
+{
+  "name": "sass-agentic-backend-core",
+  "version": "1.0.0",
+  "description": "Multi-Tenant AI RAG Platform - Node.js Core API",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "mcp": "node src/mcp-server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "@google-cloud/storage": "^7.19.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "axios": "^1.15.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "form-data": "^4.0.5",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.3.2",
+    "morgan": "^1.10.0",
+    "multer": "^2.1.1",
+    "openai": "^4.38.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
