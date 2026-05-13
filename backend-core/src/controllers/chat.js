@@ -148,6 +148,17 @@ exports.generateChat = async (req, res) => {
       finalSystemPrompt = strictDocumentOnlyPrompt(baseSystemPrompt);
     }
 
+    // Inject current year/date context and rigid formatting instructions
+    const now = new Date();
+    const dynamicContext = [
+      "",
+      "[CRITICAL CONTEXT]",
+      `- Current Date: ${now.toDateString()}`,
+      `- Current Year: ${now.getFullYear()}`,
+      "- Formatting: When responding with lists or tabular records, ALWAYS use strict GitHub Flavored Markdown tables. IMPORTANT: Ensure there are NO blank lines between table rows (e.g. the separator row and data rows must be consecutive without empty lines)."
+    ].join("\n");
+    finalSystemPrompt += dynamicContext;
+
     let response;
     if (useTools) {
       response = await LLMClient.generateResponseWithTools({

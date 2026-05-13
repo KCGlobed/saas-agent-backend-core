@@ -16,6 +16,43 @@ const renderMarkdown = (text: string) => {
       continue;
     }
 
+    // Table parsing (detects Markdown tables)
+    if (line.trim().startsWith('|') && i + 1 < lines.length && lines[i + 1].trim().match(/^\|[\s:-|]+$/)) {
+      const headers = line.split('|').map(h => h.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+      // Skip the header and the separator line
+      i += 2;
+      const rows: string[][] = [];
+      // Parse all consecutive data rows starting with |
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        const rowData = lines[i].split('|').map(d => d.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+        rows.push(rowData);
+        i++;
+      }
+      elements.push(
+        <div key={`table-${i}`} style={{ overflowX: 'auto', margin: '10px 0', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#ffffff', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px', textAlign: 'left', minWidth: 'max-content' }}>
+            <thead>
+              <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                {headers.map((h, idx) => (
+                  <th key={idx} style={{ padding: '8px 12px', fontWeight: '600', color: '#374151' }}>{parseInline(h)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, rIdx) => (
+                <tr key={rIdx} style={{ borderBottom: rIdx === rows.length - 1 ? 'none' : '1px solid #f3f4f6', transition: 'background-color 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#fafafa'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                  {r.map((cell, cIdx) => (
+                    <td key={cIdx} style={{ padding: '8px 12px', color: '#4b5563', whiteSpace: 'nowrap' }}>{parseInline(cell)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
     // Heading ## or ###
     if (line.startsWith('### ')) {
       elements.push(<p key={i} style={{ fontWeight: '700', fontSize: '14px', marginBottom: '4px', marginTop: '8px', color: 'inherit' }}>{parseInline(line.slice(4))}</p>);
