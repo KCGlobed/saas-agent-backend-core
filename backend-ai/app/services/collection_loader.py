@@ -1,12 +1,9 @@
 import json
 import os
 from typing import Any, Dict, Optional
-
 _REPO_COLLECTION_CANDIDATES = [
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "collection.json")),
 ]
-
-
 def load_api_collection(explicit: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     if explicit and isinstance(explicit, dict) and explicit.get("apis"):
         return explicit
