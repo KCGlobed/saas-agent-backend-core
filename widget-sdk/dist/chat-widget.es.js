@@ -8027,6 +8027,64 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 			r++;
 			continue;
 		}
+		if (e.trim().startsWith("|") && r + 1 < t.length && t[r + 1].trim().match(/^\|[\s:-|]+$/)) {
+			let i = e.split("|").map((e) => e.trim()).filter((e, t, n) => t > 0 && t < n.length - 1);
+			r += 2;
+			let a = [];
+			for (; r < t.length && t[r].trim().startsWith("|");) {
+				let e = t[r].split("|").map((e) => e.trim()).filter((e, t, n) => t > 0 && t < n.length - 1);
+				a.push(e), r++;
+			}
+			n.push(/* @__PURE__ */ (0, x.jsx)("div", {
+				style: {
+					overflowX: "auto",
+					margin: "10px 0",
+					border: "1px solid #e5e7eb",
+					borderRadius: "8px",
+					background: "#ffffff",
+					boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+				},
+				children: /* @__PURE__ */ (0, x.jsxs)("table", {
+					style: {
+						width: "100%",
+						borderCollapse: "collapse",
+						fontSize: "11.5px",
+						textAlign: "left",
+						minWidth: "max-content"
+					},
+					children: [/* @__PURE__ */ (0, x.jsx)("thead", { children: /* @__PURE__ */ (0, x.jsx)("tr", {
+						style: {
+							background: "#f9fafb",
+							borderBottom: "1px solid #e5e7eb"
+						},
+						children: i.map((e, t) => /* @__PURE__ */ (0, x.jsx)("th", {
+							style: {
+								padding: "8px 12px",
+								fontWeight: "600",
+								color: "#374151"
+							},
+							children: S(e)
+						}, t))
+					}) }), /* @__PURE__ */ (0, x.jsx)("tbody", { children: a.map((e, t) => /* @__PURE__ */ (0, x.jsx)("tr", {
+						style: {
+							borderBottom: t === a.length - 1 ? "none" : "1px solid #f3f4f6",
+							transition: "background-color 0.2s"
+						},
+						onMouseOver: (e) => e.currentTarget.style.backgroundColor = "#fafafa",
+						onMouseOut: (e) => e.currentTarget.style.backgroundColor = "transparent",
+						children: e.map((e, t) => /* @__PURE__ */ (0, x.jsx)("td", {
+							style: {
+								padding: "8px 12px",
+								color: "#4b5563",
+								whiteSpace: "nowrap"
+							},
+							children: S(e)
+						}, t))
+					}, t)) })]
+				})
+			}, `table-${r}`));
+			continue;
+		}
 		if (e.startsWith("### ")) {
 			n.push(/* @__PURE__ */ (0, x.jsx)("p", {
 				style: {
