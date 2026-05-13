@@ -5,6 +5,7 @@ const keysController = require('../controllers/keys');
 const chatController = require('../controllers/chat');
 const ingestionController = require('../controllers/ingestion');
 const leadsController = require('../controllers/leads');
+const toolsController = require('../controllers/tools');
 const { authMiddleware } = require('../controllers/auth');
 const multer = require('multer');
 
@@ -29,6 +30,9 @@ router.post('/projects/:id/ingest/file', authMiddleware, upload.array('file', 20
 router.post('/projects/:id/ingest/url', authMiddleware, ingestionController.ingestUrl);
 router.post('/projects/:id/ingest/text', authMiddleware, ingestionController.ingestText);
 router.get('/projects/:id/ingest/status/:jobId', authMiddleware, ingestionController.getStatus);
+
+// Tools
+router.post('/projects/:id/tools/parse', authMiddleware, toolsController.parseTextToApi);
 
 // Resource Management
 router.get('/projects/:id/resources', authMiddleware, ingestionController.listResources);

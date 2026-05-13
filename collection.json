@@ -52,10 +52,65 @@
     {
       "name": "get_student_payment_pages",
       "description": "Fetch student payment page listing.",
-      "purpose": "Use when the user asks about payments, fees, invoices, or billing pages for students.",
+      "purpose": "Use when the user asks about payments, fees, invoices, or billing pages for students. Use the available query parameters to filter by name, phone, email, date ranges (start_date/end_date), status, state, city, university, or fee waiver category. Format the results as a Markdown table.",
       "endpoint": "/api/students/studentpayment_page_list",
       "method": "GET",
-      "query_params": {}
+      "query_params": {
+        "page": {
+          "type": "number",
+          "default": 1,
+          "description": "Page number for pagination"
+        },
+        "pageSize": {
+          "type": "number",
+          "default": 20,
+          "description": "Page size for pagination"
+        },
+        "start_date": {
+          "type": "string",
+          "description": "Start date for payment filtering (YYYY-MM-DD)"
+        },
+        "end_date": {
+          "type": "string",
+          "description": "End date for payment filtering (YYYY-MM-DD)"
+        },
+        "ordering": {
+          "type": "string",
+          "description": "Ordering of results (e.g., '-id' for descending ID)"
+        },
+        "status": {
+          "type": "string",
+          "description": "Payment status (e.g., 'success', 'failed', 'pending')"
+        },
+        "full_name": {
+          "type": "string",
+          "description": "Filter by student's full name"
+        },
+        "email": {
+          "type": "string",
+          "description": "Filter by student's email address"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Filter by student's phone number"
+        },
+        "state": {
+          "type": "string",
+          "description": "Filter by student's state"
+        },
+        "city": {
+          "type": "string",
+          "description": "Filter by student's city"
+        },
+        "fee_waiver_category": {
+          "type": "string",
+          "description": "Filter by fee waiver category (e.g., 'foc')"
+        },
+        "university": {
+          "type": "string",
+          "description": "Filter by university name (e.g., 'csjmu')"
+        }
+      }
     },
     {
       "name": "get_student_campus_pages",
