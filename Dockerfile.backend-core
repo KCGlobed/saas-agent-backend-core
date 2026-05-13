@@ -21,6 +21,7 @@ RUN npm ci --omit=dev
 
 # Copy backend code
 COPY backend-core/ ./
+COPY collection.json /app/collection.json
 
 # Copy built widget
 COPY --from=widget-builder /app/widget-sdk/dist ./widget-sdk-dist
@@ -29,6 +30,7 @@ COPY --from=widget-builder /app/widget-sdk/dist ./widget-sdk-dist
 ENV NODE_ENV=production
 ENV PORT=8080
 ENV WIDGET_DIST_PATH=/app/widget-sdk-dist
+ENV COLLECTION_JSON_PATH=/app/collection.json
 
 EXPOSE 8080
 

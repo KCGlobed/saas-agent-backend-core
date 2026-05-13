@@ -13,7 +13,14 @@ function resolveTemplate(str, env) {
 }
 
 function buildProcessEnvMap() {
-  return { ...process.env };
+  const env = { ...process.env };
+  // Backward-compatible aliases for common collection placeholders / token keys.
+  env.GCC_Base = env.GCC_Base || env.GCC_BASE_URL || env.GCC_Base_url;
+  env.GCC_Base_url = env.GCC_Base_url || env.GCC_BASE_URL || env.GCC_Base;
+  env.GCC_Token = env.GCC_Token || env.GCC_TOKEN || env.token;
+  env.GCC_TOKEN = env.GCC_TOKEN || env.GCC_Token || env.token;
+  env.token = env.token || env.GCC_TOKEN || env.GCC_Token;
+  return env;
 }
 
 function mergeQueryParams(queryParamsSchema, toolArgs) {
@@ -67,7 +74,7 @@ async function executeApiTool(collection, toolName, toolArgs) {
   const headers = { Accept: 'application/json' };
   const auth = collection.auth;
   if (auth?.type === 'bearer' && auth.token_env) {
-    const token = process.env[auth.token_env];
+    const token = buildProcessEnvMap()[auth.token_env];
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 

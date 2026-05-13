@@ -12,6 +12,7 @@ WORKDIR /app
 COPY backend-core/package*.json ./
 RUN npm install --production
 COPY backend-core/ ./
+COPY collection.json /app/collection.json
 
 # Copy built widget from Stage 1
 COPY --from=widget-builder /app/widget-sdk/dist ./widget-sdk-dist
@@ -21,6 +22,7 @@ COPY --from=widget-builder /app/widget-sdk/dist ./widget-sdk-dist
 ENV NODE_ENV=production
 ENV PORT=4000
 ENV WIDGET_DIST_PATH=/app/widget-sdk-dist
+ENV COLLECTION_JSON_PATH=/app/collection.json
 
 EXPOSE 4000
 CMD ["node", "src/index.js"]
