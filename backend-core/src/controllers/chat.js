@@ -113,10 +113,24 @@ exports.generateChat = async (req, res) => {
       hasRagHits = !!bodyHasRagHits;
     }
 
-    const collection =
-      bodyApiCollection ||
-      project.config?.apiCollection ||
-      loadCollectionFromDisk();
+    let collection = bodyApiCollection || project.config?.apiCollection;
+    const diskCollection = loadCollectionFromDisk();
+
+    if (collection) {
+      // Normalize to a plain, mutable object
+      if (collection && typeof collection.toObject === 'function') {
+        collection = collection.toObject();
+      } else {
+        collection = JSON.parse(JSON.stringify(collection));
+      }
+      // Fallback to global defaults for base_url and auth if missing
+      if (diskCollection) {
+        if (!collection.base_url) collection.base_url = diskCollection.base_url;
+        if (!collection.auth) collection.auth = diskCollection.auth;
+      }
+    } else {
+      collection = diskCollection;
+    }
     const useTools = collection && Array.isArray(collection.apis) && collection.apis.length > 0;
 
     if (useTools && project.config.provider === 'llama') {
