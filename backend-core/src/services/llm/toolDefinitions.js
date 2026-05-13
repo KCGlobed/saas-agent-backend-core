@@ -1,6 +1,3 @@
-/**
- * Build LLM tool schemas from collection.json `apis` entries.
- */
 
 function specToProperty(key, spec) {
   if (typeof spec === 'string') {
