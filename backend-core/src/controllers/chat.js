@@ -60,6 +60,16 @@ function strictDocumentOnlyPrompt(base) {
 }
 
 function hybridPrompt(base, { hasRagHits }) {
+  const presentation = [
+    'Presentation (match modern chat assistants):',
+    '- Start with a short lead (1–2 sentences): what you found and how many records (if known).',
+    '- Then give a tight summary: 3–6 bullet points of highlights (totals, date range, notable outliers).',
+    '- For tabular API data: prefer a clean Markdown pipe table with a header row, a separator row (e.g. |---|---|), then rows. Keep column headers short.',
+    '- If there are many rows (>12), show the most relevant ~10–12 in the table, then say how many more exist and offer to narrow (filters) instead of dumping everything.',
+    '- Use ### section headings sparingly (e.g. ### Summary, ### Records).',
+    '- Avoid filler closings like "Let me know if you need anything else" unless the user asked for help choosing next steps.',
+  ].join('\n');
+
   const extra = [
     'You may receive a "Context information" section from the project knowledge base (RAG).',
     hasRagHits
@@ -68,6 +78,7 @@ function hybridPrompt(base, { hasRagHits }) {
     'When the user needs live or structured data (lists, filters such as "created today", counts), call the configured functions with sensible query parameters (e.g. ISO dates YYYY-MM-DD).',
     'Combine RAG and API results when both apply; otherwise use whichever source fits.',
     'If an API error is returned, explain briefly without fabricating records.',
+    presentation,
   ].join(' ');
   if (!base || !String(base).trim()) return extra;
   return `${base}\n\n${extra}`;

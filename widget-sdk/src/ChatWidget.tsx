@@ -1,56 +1,105 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { API_BASE_URL } from './main';
 
-// Simple inline markdown renderer - handles bold, italic, bullet lists, and line breaks
+const isMarkdownTableSeparator = (line: string) => {
+  const t = line.trim();
+  if (!t.startsWith('|') || !t.endsWith('|')) return false;
+  const inner = t.slice(1, -1);
+  if (!/[-:]+/.test(inner)) return false;
+  return /^[\s|:-]+$/.test(t);
+};
+
+const splitTableRow = (line: string) =>
+  line
+    .trim()
+    .split('|')
+    .map((c) => c.trim())
+    .filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+
+// Markdown-ish renderer: headings, bullets, numbered lists, hr, pipe tables (with or without separator row)
 const renderMarkdown = (text: string) => {
-  const lines = text.split('\n');
+  const sanitized = text.replace(/\|\s*\r?\n\s*\r?\n\s*\|/g, '|\n|');
+  const lines = sanitized.split('\n');
   const elements: React.ReactNode[] = [];
   let i = 0;
 
   while (i < lines.length) {
     const line = lines[i];
 
-    // Blank line
     if (line.trim() === '') {
       i++;
       continue;
     }
 
-    // Table parsing (detects Markdown tables)
-    if (line.trim().startsWith('|') && i + 1 < lines.length && lines[i + 1].trim().match(/^\|[\s:-|]+$/)) {
-      const headers = line.split('|').map(h => h.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
-      // Skip the header and the separator line
-      i += 2;
-      const rows: string[][] = [];
-      // Parse all consecutive data rows starting with |
-      while (i < lines.length && lines[i].trim().startsWith('|')) {
-        const rowData = lines[i].split('|').map(d => d.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
-        rows.push(rowData);
-        i++;
-      }
-      elements.push(
-        <div key={`table-${i}`} style={{ overflowX: 'auto', margin: '10px 0', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#ffffff', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px', textAlign: 'left', minWidth: 'max-content' }}>
-            <thead>
-              <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                {headers.map((h, idx) => (
-                  <th key={idx} style={{ padding: '8px 12px', fontWeight: '600', color: '#374151' }}>{parseInline(h)}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, rIdx) => (
-                <tr key={rIdx} style={{ borderBottom: rIdx === rows.length - 1 ? 'none' : '1px solid #f3f4f6', transition: 'background-color 0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#fafafa'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                  {r.map((cell, cIdx) => (
-                    <td key={cIdx} style={{ padding: '8px 12px', color: '#4b5563', whiteSpace: 'nowrap' }}>{parseInline(cell)}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
+    if (line.trim() === '---' || line.trim() === '***' || line.trim() === '___') {
+      elements.push(<hr key={`hr-${i}`} style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '10px 0' }} />);
+      i++;
       continue;
+    }
+
+    const trimmed = line.trim();
+    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+      const next = i + 1 < lines.length ? lines[i + 1] : '';
+      const hasSep = next && isMarkdownTableSeparator(next);
+      const nextTrim = next.trim();
+      const nextIsDataRow =
+        nextTrim.startsWith('|') &&
+        nextTrim.endsWith('|') &&
+        !isMarkdownTableSeparator(next);
+
+      if (hasSep || nextIsDataRow) {
+        const headers = splitTableRow(line);
+        let j = i + 1;
+        if (hasSep) j += 1;
+        const rows: string[][] = [];
+        while (j < lines.length) {
+          const L = lines[j].trim();
+          if (!L.startsWith('|') || !L.endsWith('|')) break;
+          if (isMarkdownTableSeparator(lines[j])) {
+            j++;
+            continue;
+          }
+          rows.push(splitTableRow(lines[j]));
+          j++;
+        }
+        if (headers.length > 0 && rows.length > 0) {
+          elements.push(
+            <div key={`table-${i}`} style={{ overflowX: 'auto', margin: '10px 0', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#ffffff', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px', textAlign: 'left', minWidth: 'max-content' }}>
+                <thead>
+                  <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                    {headers.map((h, idx) => (
+                      <th key={idx} style={{ padding: '8px 10px', fontWeight: '600', color: '#374151', maxWidth: '160px', wordBreak: 'break-word' }}>{parseInline(h)}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r, rIdx) => (
+                    <tr
+                      key={rIdx}
+                      style={{
+                        borderBottom: rIdx === rows.length - 1 ? 'none' : '1px solid #f3f4f6',
+                        background: rIdx % 2 === 1 ? '#fafafa' : 'transparent',
+                        transition: 'background-color 0.15s',
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.backgroundColor = rIdx % 2 === 1 ? '#fafafa' : 'transparent'; }}
+                    >
+                      {headers.map((_, cIdx) => (
+                        <td key={cIdx} style={{ padding: '8px 10px', color: '#4b5563', maxWidth: '200px', wordBreak: 'break-word', whiteSpace: 'normal', verticalAlign: 'top' }}>
+                          {parseInline(r[cIdx] ?? '')}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+          i = j;
+          continue;
+        }
+      }
     }
 
     // Heading ## or ###
@@ -73,6 +122,18 @@ const renderMarkdown = (text: string) => {
         i++;
       }
       elements.push(<ul key={`ul-${i}`} style={{ paddingLeft: '18px', margin: '4px 0 8px 0' }}>{listItems}</ul>);
+      continue;
+    }
+
+    // Numbered list 1. 2.
+    if (line.match(/^\d+\.\s/)) {
+      const listItems: React.ReactNode[] = [];
+      while (i < lines.length && lines[i].match(/^\d+\.\s/)) {
+        const m = lines[i].match(/^\d+\.\s(.*)$/);
+        listItems.push(<li key={i} style={{ marginBottom: '2px' }}>{parseInline(m ? m[1] : lines[i])}</li>);
+        i++;
+      }
+      elements.push(<ol key={`ol-${i}`} style={{ paddingLeft: '18px', margin: '4px 0 8px 0', listStyleType: 'decimal' }}>{listItems}</ol>);
       continue;
     }
 
@@ -306,7 +367,7 @@ const ChatWidget = ({ config }: { config: any }) => {
                   </div>
                 )}
                 <div style={{
-                  maxWidth: '82%',
+                  maxWidth: m.role === 'assistant' ? '96%' : '82%',
                   background: m.role === 'user' ? primaryColor : 'white',
                   color: m.role === 'user' ? 'white' : '#1f2937',
                   padding: '10px 14px',
@@ -314,6 +375,7 @@ const ChatWidget = ({ config }: { config: any }) => {
                   borderBottomRightRadius: m.role === 'user' ? '4px' : '16px',
                   borderBottomLeftRadius: m.role === 'user' ? '16px' : '4px',
                   fontSize: '13.5px',
+                  lineHeight: 1.5,
                   boxShadow: '0 1px 3px rgba(0,0,0,0.07)',
                   border: m.role === 'user' ? 'none' : '1px solid #e5e7eb'
                 }}>
