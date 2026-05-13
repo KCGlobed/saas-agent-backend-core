@@ -1,5 +1,6 @@
 const OpenAIProvider = require('./OpenAIProvider');
 const ClaudeProvider = require('./ClaudeProvider');
+const { runToolChat } = require('./toolChatRunner');
 
 class LLMClient {
   /**
@@ -31,6 +32,14 @@ class LLMClient {
     const client = this.getProvider(provider, apiKey);
     
     return await client.generateResponse(prompt, { model, systemPrompt });
+  }
+
+  /**
+   * Multi-turn tool loop (OpenAI / Claude) using HTTP APIs from collection.json.
+   */
+  static async generateResponseWithTools(input) {
+    const { provider, apiKey, model, systemPrompt, userMessage, collection } = input;
+    return runToolChat({ provider, apiKey, model, systemPrompt, userMessage, collection });
   }
 }
 

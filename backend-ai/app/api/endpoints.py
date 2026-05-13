@@ -1,8 +1,8 @@
 from fastapi import APIRouter, File, UploadFile, Form, BackgroundTasks, HTTPException
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Any, Dict, Optional
 from app.services.ingestion import extract_text_from_file, extract_text_from_url, process_and_store
-from app.services.rag import chat_with_context
+from app.services.rag import chat_with_context, build_rag_context
 import uuid
 
 router = APIRouter()
@@ -18,6 +18,16 @@ class UrlIngestRequest(BaseModel):
     chunkOverlap: int = 100
 
 class ChatRequest(BaseModel):
+    projectId: str
+    query: str
+    apiKey: Optional[str] = None
+    apiCollection: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional API catalog (e.g. collection.json). If omitted, loads COLLECTION_JSON_PATH or repo collection.json.",
+    )
+
+
+class RetrieveRequest(BaseModel):
     projectId: str
     query: str
     apiKey: Optional[str] = None
@@ -93,10 +103,24 @@ async def get_status(job_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
     return {"jobId": job_id, "status": ingestion_status[job_id]}
 
+@router.post("/retrieve")
+async def retrieve(req: RetrieveRequest):
+    try:
+        context, citations, has_hits = build_rag_context(req.query, req.projectId, api_key=req.apiKey)
+        return {"context": context, "citations": citations, "hasRagHits": has_hits}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/chat")
 async def chat(req: ChatRequest):
     try:
-        response = chat_with_context(req.query, req.projectId, api_key=req.apiKey)
+        response = chat_with_context(
+            req.query,
+            req.projectId,
+            api_key=req.apiKey,
+            api_collection=req.apiCollection,
+        )
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

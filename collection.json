@@ -1,395 +1,120 @@
 {
-  "info": {
-    "_postman_id": "12dcd7ee-e2f2-43c7-85f9-29df0deefc69",
-    "name": "GCC School",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "39795930",
-    "_collection_link": "https://go.postman.co/collection/39795930-12dcd7ee-e2f2-43c7-85f9-29df0deefc69?source=collection_link"
+  "base_url": "{{GCC_Base_url}}",
+  "auth": {
+    "type": "bearer",
+    "token_env": "GCC_Token"
   },
-  "item": [
+  "apis": [
     {
-      "name": "Manage websites",
-      "item": [
-        {
-          "name": "Get Student Query Page Listing",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{GCC_Token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "email",
-                "value": "",
-                "type": "text",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{GCC_Base_url}}/api/students/query_page_list?pageSize=2",
-              "host": [
-                "{{GCC_Base_url}}"
-              ],
-              "path": [
-                "api",
-                "students",
-                "query_page_list"
-              ],
-              "query": [
-                {
-                  "key": "pageSize",
-                  "value": "2"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Student Data Page Listing",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{GCC_Token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "email",
-                "value": "",
-                "type": "text",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{GCC_Base_url}}/api/students/studentdata_page_list",
-              "host": [
-                "{{GCC_Base_url}}"
-              ],
-              "path": [
-                "api",
-                "students",
-                "studentdata_page_list"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Student Data Page Listing",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "email",
-                "value": "",
-                "type": "text",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{GCC_Base_url}}/api/students/studentpayment_page_list",
-              "host": [
-                "{{GCC_Base_url}}"
-              ],
-              "path": [
-                "api",
-                "students",
-                "studentpayment_page_list"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Student Campus Page Listing",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{GCC_Token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "email",
-                "value": "",
-                "type": "text",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{GCC_Base}}/api/students/studentcampus_page_list",
-              "host": [
-                "{{GCC_Base}}"
-              ],
-              "path": [
-                "api",
-                "students",
-                "studentcampus_page_list"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get faculty Campus Page Listing",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{GCC_Token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "email",
-                "value": "",
-                "type": "text",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{GCC_Base}}/api/students/facultycampus_page_list",
-              "host": [
-                "{{GCC_Base}}"
-              ],
-              "path": [
-                "api",
-                "students",
-                "facultycampus_page_list"
-              ]
-            }
-          },
-          "response": []
+      "name": "get_student_query_pages",
+      "description": "Fetch student query page listing from the student query module.",
+      "purpose": "Use when the user asks about student queries, query queue, or query pages (not dossiers or payments).",
+      "endpoint": "/api/students/query_page_list",
+      "method": "GET",
+      "query_params": {
+        "pageSize": {
+          "type": "number",
+          "default": 10,
+          "description": "Page size for pagination"
         }
-      ]
-    },
-    {
-      "name": "Manage careers",
-      "item": [
-        {
-          "name": "Get Student Query Page Listing",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{GCC_Token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "email",
-                "value": "",
-                "type": "text",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{GCC_Base}}/api/career/careerapplication_page_list?pageSize=2",
-              "host": [
-                "{{GCC_Base}}"
-              ],
-              "path": [
-                "api",
-                "career",
-                "careerapplication_page_list"
-              ],
-              "query": [
-                {
-                  "key": "pageSize",
-                  "value": "2"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Student Data Page Listing",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{GCC_Token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "email",
-                "value": "",
-                "type": "text",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{GCC_Base}}/api/career/partners_page_list",
-              "host": [
-                "{{GCC_Base}}"
-              ],
-              "path": [
-                "api",
-                "career",
-                "partners_page_list"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "test_bucket",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{GCC_Token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "email",
-                "value": "",
-                "type": "text",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{GCC_Base}}/api/students/test",
-              "host": [
-                "{{GCC_Base}}"
-              ],
-              "path": [
-                "api",
-                "students",
-                "test"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "test_bucket excel",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{GCC_Token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "email",
-                "value": "",
-                "type": "text",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "{{GCC_Base}}/api/students/test_excel",
-              "host": [
-                "{{GCC_Base}}"
-              ],
-              "path": [
-                "api",
-                "students",
-                "test_excel"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
       }
     },
     {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
+      "name": "get_student_data_pages",
+      "description": "Fetch student data page listing (core student profile / data grids).",
+      "purpose": "Use when the user asks for student data listings, student records table, or profile data pages.",
+      "endpoint": "/api/students/studentdata_page_list",
+      "method": "GET",
+      "query_params": {}
+    },
+    {
+      "name": "get_student_dossier_pages",
+      "description": "Fetch student dossier listing pages (case files / dossier bundles).",
+      "purpose": "Use when the user asks for student dossiers, dossier lists, or dossiers created or updated on a date (e.g. today). Pass createdFrom/createdTo as YYYY-MM-DD when they mention a day or range.",
+      "endpoint": "/api/students/dossier_page_list",
+      "method": "GET",
+      "query_params": {
+        "pageSize": {
+          "type": "number",
+          "default": 50,
+          "description": "Rows per page"
+        },
+        "createdFrom": {
+          "type": "string",
+          "description": "Inclusive start date filter on created date (ISO YYYY-MM-DD)"
+        },
+        "createdTo": {
+          "type": "string",
+          "description": "Inclusive end date filter on created date (ISO YYYY-MM-DD). For 'today', set both createdFrom and createdTo to today's date."
+        }
       }
-    }
-  ],
-  "variable": [
-    {
-      "key": "GCC_Base_url",
-      "value": ""
     },
     {
-      "key": "GCC_Token",
-      "value": ""
+      "name": "get_student_payment_pages",
+      "description": "Fetch student payment page listing.",
+      "purpose": "Use when the user asks about payments, fees, invoices, or billing pages for students.",
+      "endpoint": "/api/students/studentpayment_page_list",
+      "method": "GET",
+      "query_params": {}
     },
     {
-      "key": "GCC_Base",
-      "value": ""
+      "name": "get_student_campus_pages",
+      "description": "Fetch student campus page listing.",
+      "purpose": "Use when the user asks about student campus assignments or campus-related student pages.",
+      "endpoint": "/api/students/studentcampus_page_list",
+      "method": "GET",
+      "query_params": {},
+      "base_override": "{{GCC_Base}}"
+    },
+    {
+      "name": "get_faculty_campus_pages",
+      "description": "Fetch faculty campus page listing.",
+      "purpose": "Use when the user asks about faculty on campus or faculty campus listings.",
+      "endpoint": "/api/students/facultycampus_page_list",
+      "method": "GET",
+      "query_params": {},
+      "base_override": "{{GCC_Base}}"
+    },
+    {
+      "name": "get_career_applications",
+      "description": "Fetch career application listing.",
+      "purpose": "Use when the user asks about career applications, applicants, or job application lists.",
+      "endpoint": "/api/career/careerapplication_page_list",
+      "method": "GET",
+      "query_params": {
+        "pageSize": {
+          "type": "number",
+          "default": 10
+        }
+      },
+      "base_override": "{{GCC_Base}}"
+    },
+    {
+      "name": "get_career_partners",
+      "description": "Fetch career partners listing.",
+      "purpose": "Use when the user asks about career partners or employer partners.",
+      "endpoint": "/api/career/partners_page_list",
+      "method": "GET",
+      "query_params": {},
+      "base_override": "{{GCC_Base}}"
+    },
+    {
+      "name": "test_students",
+      "description": "Test students API (smoke test).",
+      "purpose": "Use only for connectivity checks or when explicitly asked to hit the test students endpoint.",
+      "endpoint": "/api/students/test",
+      "method": "GET",
+      "query_params": {},
+      "base_override": "{{GCC_Base}}"
+    },
+    {
+      "name": "test_students_excel",
+      "description": "Test students excel export API.",
+      "purpose": "Use when the user explicitly wants the test Excel export endpoint.",
+      "endpoint": "/api/students/test_excel",
+      "method": "GET",
+      "query_params": {},
+      "base_override": "{{GCC_Base}}"
     }
   ]
 }
