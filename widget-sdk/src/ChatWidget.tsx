@@ -246,6 +246,37 @@ const ChatWidget = ({ config }: { config: any }) => {
     scrollToBottom();
   }, [messages, isOpen, leadSubmitted]);
 
+  const [size, setSize] = useState({ width: 380, height: 560 });
+  const isResizing = useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing.current) return;
+      e.preventDefault();
+      const newWidth = window.innerWidth - 24 - e.clientX;
+      const newHeight = window.innerHeight - 96 - e.clientY;
+      setSize({
+        width: Math.max(380, Math.min(newWidth, window.innerWidth - 48)),
+        height: Math.max(560, Math.min(newHeight, window.innerHeight - 120))
+      });
+    };
+
+    const handleMouseUp = () => {
+      if (isResizing.current) {
+        isResizing.current = false;
+        document.body.style.cursor = 'default';
+        document.body.style.userSelect = 'auto';
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
   const primaryColor = config.primaryColor || '#6366f1';
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
@@ -317,13 +348,28 @@ const ChatWidget = ({ config }: { config: any }) => {
   return (
     <div style={{
       position: 'fixed', bottom: '96px', right: '24px',
-      width: '380px', height: '560px',
+      width: `${size.width}px`, height: `${size.height}px`,
+      minWidth: '380px', minHeight: '560px',
       background: 'white', border: 'none',
       borderRadius: '20px', display: 'flex', flexDirection: 'column',
       boxShadow: '0 16px 48px rgba(0,0,0,0.18)',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       overflow: 'hidden', zIndex: 9999
     }}>
+      {/* Top-Left Resize Handle */}
+      <div
+        onMouseDown={(e) => {
+          e.preventDefault();
+          isResizing.current = true;
+          document.body.style.cursor = 'nwse-resize';
+          document.body.style.userSelect = 'none';
+        }}
+        style={{
+          position: 'absolute', top: 0, left: 0, width: '24px', height: '24px',
+          cursor: 'nwse-resize', zIndex: 10000
+        }}
+        title="Drag to resize"
+      />
       {/* Header */}
       <div style={{
         padding: '18px 20px', background: config.headerColor || primaryColor, color: 'white',
