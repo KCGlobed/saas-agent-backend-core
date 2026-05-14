@@ -17,7 +17,7 @@ const splitTableRow = (line: string) =>
     .filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
 
 // Markdown-ish renderer: headings, bullets, numbered lists, hr, pipe tables (with or without separator row)
-const renderMarkdown = (text: string) => {
+const renderMarkdown = (text: string, primaryColor: string) => {
   const sanitized = text.replace(/\|\s*\r?\n\s*\r?\n\s*\|/g, '|\n|');
   const lines = sanitized.split('\n');
   const elements: React.ReactNode[] = [];
@@ -69,7 +69,7 @@ const renderMarkdown = (text: string) => {
                 <thead>
                   <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
                     {headers.map((h, idx) => (
-                      <th key={idx} style={{ padding: '8px 10px', fontWeight: '600', color: '#374151', maxWidth: '160px', wordBreak: 'break-word' }}>{parseInline(h)}</th>
+                      <th key={idx} style={{ padding: '8px 10px', fontWeight: '600', color: '#374151', maxWidth: '160px', wordBreak: 'break-word' }}>{parseInline(h, primaryColor)}</th>
                     ))}
                   </tr>
                 </thead>
@@ -87,7 +87,7 @@ const renderMarkdown = (text: string) => {
                     >
                       {headers.map((_, cIdx) => (
                         <td key={cIdx} style={{ padding: '8px 10px', color: '#4b5563', maxWidth: '200px', wordBreak: 'break-word', whiteSpace: 'normal', verticalAlign: 'top' }}>
-                          {parseInline(r[cIdx] ?? '')}
+                          {parseInline(r[cIdx] ?? '', primaryColor)}
                         </td>
                       ))}
                     </tr>
@@ -104,12 +104,12 @@ const renderMarkdown = (text: string) => {
 
     // Heading ## or ###
     if (line.startsWith('### ')) {
-      elements.push(<p key={i} style={{ fontWeight: '700', fontSize: '14px', marginBottom: '4px', marginTop: '8px', color: 'inherit' }}>{parseInline(line.slice(4))}</p>);
+      elements.push(<p key={i} style={{ fontWeight: '700', fontSize: '14px', marginBottom: '4px', marginTop: '8px', color: 'inherit' }}>{parseInline(line.slice(4), primaryColor)}</p>);
       i++;
       continue;
     }
     if (line.startsWith('## ')) {
-      elements.push(<p key={i} style={{ fontWeight: '700', fontSize: '15px', marginBottom: '6px', marginTop: '8px', color: 'inherit' }}>{parseInline(line.slice(3))}</p>);
+      elements.push(<p key={i} style={{ fontWeight: '700', fontSize: '15px', marginBottom: '6px', marginTop: '8px', color: 'inherit' }}>{parseInline(line.slice(3), primaryColor)}</p>);
       i++;
       continue;
     }
@@ -118,7 +118,7 @@ const renderMarkdown = (text: string) => {
     if (line.match(/^[\*\-] /)) {
       const listItems: React.ReactNode[] = [];
       while (i < lines.length && lines[i].match(/^[\*\-] /)) {
-        listItems.push(<li key={i} style={{ marginBottom: '2px' }}>{parseInline(lines[i].slice(2))}</li>);
+        listItems.push(<li key={i} style={{ marginBottom: '2px' }}>{parseInline(lines[i].slice(2), primaryColor)}</li>);
         i++;
       }
       elements.push(<ul key={`ul-${i}`} style={{ paddingLeft: '18px', margin: '4px 0 8px 0' }}>{listItems}</ul>);
@@ -130,7 +130,7 @@ const renderMarkdown = (text: string) => {
       const listItems: React.ReactNode[] = [];
       while (i < lines.length && lines[i].match(/^\d+\.\s/)) {
         const m = lines[i].match(/^\d+\.\s(.*)$/);
-        listItems.push(<li key={i} style={{ marginBottom: '2px' }}>{parseInline(m ? m[1] : lines[i])}</li>);
+        listItems.push(<li key={i} style={{ marginBottom: '2px' }}>{parseInline(m ? m[1] : lines[i], primaryColor)}</li>);
         i++;
       }
       elements.push(<ol key={`ol-${i}`} style={{ paddingLeft: '18px', margin: '4px 0 8px 0', listStyleType: 'decimal' }}>{listItems}</ol>);
@@ -138,17 +138,24 @@ const renderMarkdown = (text: string) => {
     }
 
     // Regular paragraph
-    elements.push(<p key={i} style={{ margin: '0 0 6px 0', lineHeight: '1.55' }}>{parseInline(line)}</p>);
+    elements.push(<p key={i} style={{ margin: '0 0 6px 0', lineHeight: '1.55' }}>{parseInline(line, primaryColor)}</p>);
     i++;
   }
 
   return elements;
 };
 
-// Inline parser: **bold**, *italic*, `code`
-const parseInline = (text: string): React.ReactNode => {
+const isDownloadableFile = (url: string) => {
+  const extensions = ['.xlsx', '.xls', '.csv', '.pdf', '.zip', '.docx', '.pptx'];
+  const urlWithoutQuery = url.split('?')[0].toLowerCase();
+  return extensions.some(ext => urlWithoutQuery.endsWith(ext));
+};
+
+// Inline parser: **bold**, *italic*, `code`, [link](url)
+const parseInline = (text: string, primaryColor: string = '#6366f1'): React.ReactNode => {
   const parts: React.ReactNode[] = [];
-  const regex = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+  // Updated regex to catch markdown links: [label](url)
+  const regex = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[([^\]]+)\]\(([^)]+)\))/g;
   let lastIndex = 0;
   let match;
 
@@ -163,6 +170,49 @@ const parseInline = (text: string): React.ReactNode => {
       parts.push(<em key={match.index}>{raw.slice(1, -1)}</em>);
     } else if (raw.startsWith('`')) {
       parts.push(<code key={match.index} style={{ background: 'rgba(0,0,0,0.07)', padding: '1px 4px', borderRadius: '3px', fontSize: '12px', fontFamily: 'monospace' }}>{raw.slice(1, -1)}</code>);
+    } else if (raw.startsWith('[')) {
+      const label = match[2];
+      const url = match[3];
+      if (isDownloadableFile(url)) {
+        parts.push(
+          <a
+            key={match.index}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              margin: '4px 0',
+              background: primaryColor,
+              color: 'white',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontWeight: '600',
+              fontSize: '12.5px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              transition: 'transform 0.1s, opacity 0.1s'
+            }}
+            onMouseOver={e => e.currentTarget.style.opacity = '0.9'}
+            onMouseOut={e => e.currentTarget.style.opacity = '1'}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            {label}
+          </a>
+        );
+      } else {
+        parts.push(
+          <a key={match.index} href={url} target="_blank" rel="noopener noreferrer" style={{ color: primaryColor, fontWeight: '500', textDecoration: 'underline' }}>
+            {label}
+          </a>
+        );
+      }
     }
     lastIndex = match.index + raw.length;
   }
@@ -390,7 +440,7 @@ const ChatWidget = ({ config }: { config: any }) => {
                       ))}
                     </div>
                   ) : (
-                    <div>{renderMarkdown(m.content)}</div>
+                    <div>{renderMarkdown(m.content, primaryColor)}</div>
                   )}
                 </div>
               </div>

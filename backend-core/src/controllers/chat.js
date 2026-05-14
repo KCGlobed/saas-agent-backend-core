@@ -166,7 +166,8 @@ exports.generateChat = async (req, res) => {
       "[CRITICAL CONTEXT]",
       `- Current Date: ${now.toDateString()}`,
       `- Current Year: ${now.getFullYear()}`,
-      "- Formatting: When responding with lists or tabular records, ALWAYS use strict GitHub Flavored Markdown tables. IMPORTANT: Ensure there are NO blank lines between table rows (e.g. the separator row and data rows must be consecutive without empty lines)."
+      "- Formatting: When responding with lists or tabular records, ALWAYS use strict GitHub Flavored Markdown tables. IMPORTANT: Ensure there are NO blank lines between table rows (e.g. the separator row and data rows must be consecutive without empty lines).",
+      "- File Links: When providing a link to a downloadable report or file (e.g. Excel, PDF), ALWAYS use standard Markdown format [Link Text](URL). Ensure the link text describes the file (e.g. [View Excel Report](url))."
     ].join("\n");
     finalSystemPrompt += dynamicContext;
 
