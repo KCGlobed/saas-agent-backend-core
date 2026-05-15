@@ -1,5 +1,5 @@
 # Stage 1: Build Widget SDK
-FROM node:18-alpine AS widget-builder
+FROM node:22-alpine AS widget-builder
 WORKDIR /app/widget-sdk
 COPY widget-sdk/package*.json ./
 RUN npm install
@@ -7,7 +7,7 @@ COPY widget-sdk/ ./
 RUN npm run build
 
 # Stage 2: Build Backend Core
-FROM node:18-alpine
+FROM node:22-alpine
 WORKDIR /app
 COPY backend-core/package*.json ./
 RUN npm install --production

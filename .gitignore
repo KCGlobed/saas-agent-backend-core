@@ -16,3 +16,5 @@
 /widget-sdk/.gitignore
 
 /backend-ai
+
+backend-core.pem
