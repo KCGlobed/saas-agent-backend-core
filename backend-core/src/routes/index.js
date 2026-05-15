@@ -34,6 +34,7 @@ router.get('/projects/:id/ingest/status/:jobId', authMiddleware, ingestionContro
 // Tools
 router.post('/projects/:id/tools/parse', authMiddleware, toolsController.parseTextToApi);
 router.post('/projects/:id/tools', authMiddleware, toolsController.addToolsToProject);
+router.put('/projects/:id/tools/:name', authMiddleware, toolsController.updateToolInProject);
 router.delete('/projects/:id/tools/:name', authMiddleware, toolsController.removeToolFromProject);
 
 // Resource Management

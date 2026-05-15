@@ -155,3 +155,58 @@ exports.removeToolFromProject = async (req, res) => {
     res.status(500).json({ error: 'Server error deleting tool configuration.' });
   }
 };
+
+/**
+ * PUT /projects/:id/tools/:name
+ * Update a specific API tool definition within a project's apiCollection.
+ * The :name URL param identifies which tool to update (by its current name).
+ * All fields provided in req.body will be merged into the existing tool.
+ * To rename the tool, include a `name` field in req.body with the new name.
+ */
+exports.updateToolInProject = async (req, res) => {
+  try {
+    const { id, name } = req.params;
+    const updates = req.body;
+
+    if (!updates || typeof updates !== 'object' || Array.isArray(updates)) {
+      return res.status(400).json({ error: 'Request body must be a JSON object with fields to update.' });
+    }
+
+    const project = await Project.findOne({ _id: id, user: req.user.id });
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    if (!project.config?.apiCollection?.apis || !Array.isArray(project.config.apiCollection.apis)) {
+      return res.status(404).json({ error: `No apiCollection found for project.` });
+    }
+
+    const toolIndex = project.config.apiCollection.apis.findIndex((a) => a.name === name);
+    if (toolIndex === -1) {
+      return res.status(404).json({ error: `Tool '${name}' not found in this project's apiCollection.` });
+    }
+
+    // Deep merge: spread existing tool then apply updates (updates win over existing fields)
+    // If query_params are provided, they fully replace the existing ones for precision
+    const existingTool = project.config.apiCollection.apis[toolIndex];
+    const updatedTool = {
+      ...existingTool,
+      ...updates,
+      // If query_params were explicitly provided in updates, use them; otherwise keep existing
+      query_params: updates.query_params !== undefined ? updates.query_params : existingTool.query_params
+    };
+
+    project.config.apiCollection.apis[toolIndex] = updatedTool;
+
+    // Mongoose requires markModified for nested Mixed types
+    project.markModified('config.apiCollection');
+    await project.save();
+
+    res.json({
+      message: `Tool '${name}' updated successfully.`,
+      tool: updatedTool,
+      apiCollection: project.config.apiCollection
+    });
+  } catch (error) {
+    console.error('updateToolInProject error:', error);
+    res.status(500).json({ error: 'Server error updating tool configuration.' });
+  }
+};
