@@ -6,6 +6,7 @@ const chatController = require('../controllers/chat');
 const ingestionController = require('../controllers/ingestion');
 const leadsController = require('../controllers/leads');
 const toolsController = require('../controllers/tools');
+const logsController = require('../controllers/logs');
 const { authMiddleware } = require('../controllers/auth');
 const multer = require('multer');
 
@@ -36,6 +37,12 @@ router.post('/projects/:id/tools/parse', authMiddleware, toolsController.parseTe
 router.post('/projects/:id/tools', authMiddleware, toolsController.addToolsToProject);
 router.put('/projects/:id/tools/:name', authMiddleware, toolsController.updateToolInProject);
 router.delete('/projects/:id/tools/:name', authMiddleware, toolsController.removeToolFromProject);
+
+// Chat Logs
+router.get('/projects/:id/logs/stats', authMiddleware, logsController.getLogStats);
+router.get('/projects/:id/logs/:logId', authMiddleware, logsController.getLog);
+router.get('/projects/:id/logs', authMiddleware, logsController.getLogs);
+router.delete('/projects/:id/logs', authMiddleware, logsController.clearLogs);
 
 // Resource Management
 router.get('/projects/:id/resources', authMiddleware, ingestionController.listResources);

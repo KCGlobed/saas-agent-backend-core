@@ -3,6 +3,8 @@ const path = require('path');
 const Project = require('../models/Project');
 const ApiKey = require('../models/ApiKey');
 const LLMClient = require('../services/llm/LLMClient');
+const ChatLog = require('../models/ChatLog');
+const { scoreAccuracy } = require('../services/accuracy');
 
 const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8001/api';
 
@@ -171,6 +173,9 @@ exports.generateChat = async (req, res) => {
     ].join("\n");
     finalSystemPrompt += dynamicContext;
 
+    // ── Timing start ──
+    const startTime = Date.now();
+
     let response;
     if (useTools) {
       response = await LLMClient.generateResponseWithTools({
@@ -191,9 +196,52 @@ exports.generateChat = async (req, res) => {
       });
     }
 
+    const latencyMs = Date.now() - startTime;
+
+    // ── Extract tool calls made (if any) from the response ──
+    const toolCallsMade = Array.isArray(response.toolCalls)
+      ? response.toolCalls.map(tc => ({ name: tc.name || tc.function?.name, params: tc.arguments || tc.function?.arguments }))
+      : [];
+
     const out = { ...response };
     if (citations.length) out.citations = citations;
+
+    // ── Send response immediately — don't block on logging ──
     res.json(out);
+
+    // ── Background: score accuracy + persist log ──
+    const responseText = typeof response.response === 'string' ? response.response : JSON.stringify(response.response || '');
+    setImmediate(async () => {
+      try {
+        const { score: accuracyScore, note: accuracyNote } = await scoreAccuracy({
+          query: prompt,
+          response: responseText,
+          context: contextBlock,
+          hasRagHits,
+          toolCallsMade,
+          provider: project.config.provider,
+          apiKey,
+          model: project.config.model,
+        });
+
+        await ChatLog.create({
+          projectId,
+          query: prompt,
+          response: responseText,
+          provider: project.config.provider,
+          model: project.config.model,
+          latencyMs,
+          hasRagHits,
+          citations,
+          toolCallsMade,
+          accuracyScore,
+          accuracyNote,
+        });
+      } catch (logErr) {
+        console.error('[chat] Background logging failed:', logErr.message);
+      }
+    });
+
   } catch (error) {
     console.error('Chat generation error:', error);
     res.status(500).json({ error: error.message || 'Server error' });
