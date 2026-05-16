@@ -81,8 +81,9 @@ exports.getLogStats = async (req, res) => {
   try {
     const { id } = req.params;
 
+    const mongoose = require('mongoose');
     const [stats] = await ChatLog.aggregate([
-      { $match: { projectId: require('mongoose').Types.ObjectId.createFromHexString(id), accuracyScore: { $ne: null } } },
+      { $match: { projectId: new mongoose.Types.ObjectId(id), accuracyScore: { $ne: null } } },
       {
         $group: {
           _id: null,
