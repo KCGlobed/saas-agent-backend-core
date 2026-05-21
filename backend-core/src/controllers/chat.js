@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const Project = require('../models/Project');
+const Dataset = require('../models/Dataset');
 const ApiKey = require('../models/ApiKey');
 const LLMClient = require('../services/llm/LLMClient');
 const ChatLog = require('../models/ChatLog');
@@ -142,8 +143,29 @@ exports.generateChat = async (req, res) => {
         if (!collection.auth) collection.auth = diskCollection.auth;
       }
     } else {
-      collection = diskCollection;
+      collection = diskCollection ? { ...diskCollection } : { apis: [] };
     }
+    
+    const datasets = await Dataset.find({ projectId });
+    if (datasets && datasets.length > 0) {
+      if (!collection) collection = { apis: [] };
+      if (!collection.apis) collection.apis = [];
+      
+      const tablesMetadata = datasets.flatMap(d => d.tables || []);
+      
+      collection.apis.push({
+        name: 'query_project_datasets',
+        description: 'Query the user\'s uploaded datasets (Excel/CSV files) using natural language to get analytics, tables, and charts. Use this tool when the user asks questions that require joining, filtering, or aggregating data from the uploaded files.',
+        method: 'POST',
+        url: `${FASTAPI_URL}/datasets/query`,
+        bodyParams: {
+          query: { type: 'string', required: true, description: 'The natural language query describing what analytics or data the user wants.' },
+          tables_metadata: { type: 'array', required: true, description: 'MUST BE exact JSON of tablesMetadata.', default: tablesMetadata },
+          apiKey: { type: 'string', required: false, description: 'OpenAI API key', default: apiKey }
+        }
+      });
+    }
+
     const useTools = collection && Array.isArray(collection.apis) && collection.apis.length > 0;
 
     if (useTools && project.config.provider === 'llama') {

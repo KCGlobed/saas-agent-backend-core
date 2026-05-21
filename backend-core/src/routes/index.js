@@ -7,6 +7,7 @@ const ingestionController = require('../controllers/ingestion');
 const leadsController = require('../controllers/leads');
 const toolsController = require('../controllers/tools');
 const logsController = require('../controllers/logs');
+const datasetsController = require('../controllers/datasets');
 const { authMiddleware } = require('../controllers/auth');
 const multer = require('multer');
 
@@ -48,6 +49,12 @@ router.delete('/projects/:id/logs', authMiddleware, logsController.clearLogs);
 router.get('/projects/:id/resources', authMiddleware, ingestionController.listResources);
 router.get('/projects/:id/resources/:resourceId/preview', authMiddleware, ingestionController.previewResource);
 router.delete('/projects/:id/resources/:resourceId', authMiddleware, ingestionController.deleteResource);
+
+// Datasets
+router.get('/projects/:id/datasets', authMiddleware, datasetsController.getDatasets);
+router.post('/projects/:id/datasets/upload', authMiddleware, upload.array('files', 10), datasetsController.uploadDatasetFiles);
+router.put('/projects/:id/datasets/:datasetId', authMiddleware, datasetsController.updateDataset);
+router.delete('/projects/:id/datasets/:datasetId', authMiddleware, datasetsController.deleteDataset);
 
 // Knowledge Base (list ingested files for a project)
 router.get('/projects/:id/knowledge', authMiddleware, async (req, res) => {

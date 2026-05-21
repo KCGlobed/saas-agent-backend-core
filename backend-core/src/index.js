@@ -23,8 +23,8 @@ app.use('/api', routes);
 
 // Database Connection
 const PORT = process.env.PORT || 4000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/sass_agentic';
-
+const MONGO_URI = process.env.MONGO_URI
+console.log(MONGO_URI, "-----mango")
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('Connected to MongoDB');
