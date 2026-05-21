@@ -9,10 +9,15 @@ const toolsController = require('../controllers/tools');
 const logsController = require('../controllers/logs');
 const datasetsController = require('../controllers/datasets');
 const { authMiddleware } = require('../controllers/auth');
+const auditLogger = require('../middleware/auditLogger');
 const multer = require('multer');
 
 const router = express.Router();
 const upload = multer();
+
+// Apply audit logger to all routes
+router.use(auditLogger);
+
 // Auth
 router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
@@ -55,6 +60,30 @@ router.get('/projects/:id/datasets', authMiddleware, datasetsController.getDatas
 router.post('/projects/:id/datasets/upload', authMiddleware, upload.array('files', 10), datasetsController.uploadDatasetFiles);
 router.put('/projects/:id/datasets/:datasetId', authMiddleware, datasetsController.updateDataset);
 router.delete('/projects/:id/datasets/:datasetId', authMiddleware, datasetsController.deleteDataset);
+
+// Google Auth
+const googleAuthController = require('../controllers/googleAuth');
+router.get('/auth/google/url', googleAuthController.getGoogleAuthUrl);
+router.post('/auth/google/callback', authMiddleware, googleAuthController.exchangeCode);
+router.get('/auth/google/status', authMiddleware, googleAuthController.checkGoogleStatus);
+
+// Data Connectors
+router.post('/projects/:id/datasets/connect/google-sheet/list-sheets', authMiddleware, datasetsController.listGoogleSheets);
+router.post('/projects/:id/datasets/connect/google-sheet', authMiddleware, datasetsController.connectGoogleSheet);
+
+router.post('/projects/:id/datasets/connect/sql/test', authMiddleware, datasetsController.testSqlConnection);
+router.post('/projects/:id/datasets/connect/sql', authMiddleware, datasetsController.connectSql);
+
+router.post('/projects/:id/datasets/connect/mongodb/test', authMiddleware, datasetsController.testMongoConnection);
+router.post('/projects/:id/datasets/connect/mongodb', authMiddleware, datasetsController.connectMongodb);
+
+// Query Mode Toggle and Sync
+router.patch('/projects/:id/datasets/:datasetId/tables/:tableId/query-mode', authMiddleware, datasetsController.patchQueryMode);
+router.post('/projects/:id/datasets/:datasetId/tables/:tableId/sync', authMiddleware, datasetsController.syncTable);
+router.get('/projects/:id/datasets/:datasetId/tables/:tableId/sync-status', authMiddleware, datasetsController.getSyncStatus);
+
+// Admin
+router.get('/admin/logs', authMiddleware, logsController.getAuditLogs);
 
 // Knowledge Base (list ingested files for a project)
 router.get('/projects/:id/knowledge', authMiddleware, async (req, res) => {

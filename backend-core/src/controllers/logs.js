@@ -112,3 +112,32 @@ exports.getLogStats = async (req, res) => {
     res.status(500).json({ error: 'Server error fetching log stats.' });
   }
 };
+
+const AuditLog = require('../models/AuditLog');
+
+exports.getAuditLogs = async (req, res) => {
+  try {
+    const { page = 1, limit = 50, status, action, userId } = req.query;
+    
+    const query = {};
+    if (status) query.status = status;
+    if (action) query.action = { $regex: action, $options: 'i' };
+    if (userId) query.userId = userId;
+
+    const logs = await AuditLog.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+      
+    const total = await AuditLog.countDocuments(query);
+    
+    res.json({
+      logs,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch logs' });
+  }
+};
