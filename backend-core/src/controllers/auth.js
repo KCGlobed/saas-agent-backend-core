@@ -84,7 +84,7 @@ exports.forgotPassword = async (req, res) => {
     await user.save();
 
     // Development helper link format expected by the frontend:
-    const resetUrl = `http://localhost:5173/reset-password/${token}`;
+    const resetUrl = process.env.REDIRECT_URL + `/reset-password/${token}`;
 
     await sendResetPasswordEmail(user.email, user.name, resetUrl);
 
