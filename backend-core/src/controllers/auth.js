@@ -74,14 +74,13 @@ exports.forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(200).json({ success: true, message: 'Password reset instructions sent.' });
+      return res.status(404).json({ error: 'User not found with this email.' });
     }
 
     const token = crypto.randomBytes(20).toString('hex');
 
     user.resetPasswordToken = token;
     const expiresMins = parseInt(process.env.PASSWORD_RESET_EXPIRES_MINS || '5', 10);
-    // Expiration time calculation: minutes * 60 seconds * 1000 milliseconds
     user.resetPasswordExpires = Date.now() + (expiresMins * 60 * 1000);
     await user.save();
 
@@ -108,13 +107,17 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ error: 'Password is required' });
     }
 
-    const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
+    const user = await User.findOne({ resetPasswordToken: token });
 
     if (!user) {
-      return res.status(400).json({ error: 'Password reset token is invalid or has expired.' });
+      return res.status(400).json({ error: 'Invalid token and Expired.' });
+    }
+
+    if (user.resetPasswordExpires < Date.now()) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+      return res.status(400).json({ error: 'Invalid token and Expired.' });
     }
 
     const salt = await bcrypt.genSalt(10);
