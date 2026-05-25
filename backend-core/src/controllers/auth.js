@@ -1,14 +1,16 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { sendResetPasswordEmail } = require('../services/email');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_do_not_use_in_prod';
 
+
 exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    
+
     let user = await User.findOne({ email });
     if (user) {
       return res.status(400).json({ error: 'User already exists' });
@@ -21,7 +23,7 @@ exports.register = async (req, res) => {
     await user.save();
 
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
-    
+
     res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email } });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -31,7 +33,7 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ error: 'Invalid credentials' });
@@ -43,7 +45,7 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
-    
+
     res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -72,18 +74,17 @@ exports.forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      // For security, return success but do not provide resetUrl
       return res.status(200).json({ success: true, message: 'Password reset instructions sent.' });
     }
 
-    const crypto = require('crypto');
     const token = crypto.randomBytes(20).toString('hex');
 
     user.resetPasswordToken = token;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour from now
+    const expiresMins = parseInt(process.env.PASSWORD_RESET_EXPIRES_MINS || '5', 10);
+    // Expiration time calculation: minutes * 60 seconds * 1000 milliseconds
+    user.resetPasswordExpires = Date.now() + (expiresMins * 60 * 1000);
     await user.save();
 
-    // Development helper link format expected by the frontend:
     const resetUrl = process.env.REDIRECT_URL + `/reset-password/${token}`;
 
     await sendResetPasswordEmail(user.email, user.name, resetUrl);
