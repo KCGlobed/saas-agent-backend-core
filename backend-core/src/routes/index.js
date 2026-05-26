@@ -21,6 +21,8 @@ router.use(auditLogger);
 // Auth
 router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
+router.post('/auth/forgot-password', authController.forgotPassword);
+router.post('/auth/reset-password/:token', authController.resetPassword);
 
 // Projects
 router.get('/projects', authMiddleware, projectsController.getProjects);
