@@ -8,7 +8,9 @@ const leadsController = require('../controllers/leads');
 const toolsController = require('../controllers/tools');
 const logsController = require('../controllers/logs');
 const datasetsController = require('../controllers/datasets');
+const adminController = require('../controllers/admin');
 const { authMiddleware } = require('../controllers/auth');
+const { superadminMiddleware } = require('../middleware/roleAuth');
 const auditLogger = require('../middleware/auditLogger');
 const multer = require('multer');
 
@@ -86,6 +88,8 @@ router.get('/projects/:id/datasets/:datasetId/tables/:tableId/sync-status', auth
 
 // Admin
 router.get('/admin/logs', authMiddleware, logsController.getAuditLogs);
+router.get('/admin/users', authMiddleware, superadminMiddleware, adminController.getAllUsers);
+router.put('/admin/users/:id/permissions', authMiddleware, superadminMiddleware, adminController.updateUserPermissions);
 
 // Knowledge Base (list ingested files for a project)
 router.get('/projects/:id/knowledge', authMiddleware, async (req, res) => {

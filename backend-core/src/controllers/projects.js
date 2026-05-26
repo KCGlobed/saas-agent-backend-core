@@ -12,6 +12,18 @@ exports.getProjects = async (req, res) => {
 exports.createProject = async (req, res) => {
   try {
     const { name, config } = req.body;
+    
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    const projectCount = await Project.countDocuments({ user: req.user.id });
+    const limit = user.permissions?.projectsLimit ?? 3;
+    
+    if (user.role !== 'superadmin' && projectCount >= limit) {
+      return res.status(403).json({ error: `Project limit of ${limit} reached. Please contact admin.` });
+    }
+
     const project = new Project({ name, user: req.user.id, config });
     await project.save();
     res.status(201).json(project);
