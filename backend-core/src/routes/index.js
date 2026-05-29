@@ -35,6 +35,8 @@ router.delete('/projects/:id', authMiddleware, projectsController.deleteProject)
 // API Keys
 router.get('/keys', authMiddleware, keysController.getKeys);
 router.post('/keys', authMiddleware, keysController.saveKey);
+router.put('/keys/:provider', authMiddleware, keysController.updateKey);
+router.delete('/keys/:provider', authMiddleware, keysController.deleteKey);
 
 // Data Ingestion Proxy — multi-file, url, raw text
 router.post('/projects/:id/ingest/file', authMiddleware, upload.array('file', 20), ingestionController.ingestFiles);

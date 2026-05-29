@@ -29,3 +29,37 @@ exports.getKeys = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+exports.updateKey = async (req, res) => {
+  try {
+    const { provider } = req.params;
+    const { key } = req.body;
+    let apiKey = await ApiKey.findOne({ user: req.user.id, provider });
+    
+    if (!apiKey) {
+      return res.status(404).json({ error: 'API Key not found' });
+    }
+    
+    apiKey.key = key;
+    await apiKey.save();
+    
+    res.json({ message: 'API Key updated successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.deleteKey = async (req, res) => {
+  try {
+    const { provider } = req.params;
+    const apiKey = await ApiKey.findOneAndDelete({ user: req.user.id, provider });
+    
+    if (!apiKey) {
+      return res.status(404).json({ error: 'API Key not found' });
+    }
+    
+    res.json({ message: 'API Key deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
