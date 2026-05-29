@@ -52,13 +52,13 @@ function buildUserMessage(prompt, contextBlock) {
   if (!contextBlock || !String(contextBlock).trim()) {
     return prompt;
   }
-  return `Context information is below.\n---------------------\n${contextBlock}\n---------------------\nGiven the context information (if any) and available tools, answer the query.\nQuery: ${prompt}`;
+  return `Context information from knowledge base (may or may not be relevant):\n---------------------\n${contextBlock}\n---------------------\nInstructions: Use the conversation history and the context information above (if relevant) to answer the user's query. If the context is irrelevant to the ongoing conversation, ignore it.\n\nUser Query: ${prompt}`;
 }
 
 function strictDocumentOnlyPrompt(base) {
   const strictConstraint =
-    ' Use the provided context to answer questions. Give concise, direct, conversational answers — do NOT use structured formats like "Answer:", "Explanation:", "Key Points:", "Source:", or excessive headers and bullet points unless specifically asked. If the user asks a question not covered by the context, politely say you can only answer based on the provided documents. You MAY respond to general greetings and pleasantries normally.';
-  if (base.includes('Use the provided context to answer questions')) return base;
+    ' Use the provided context and the conversation history to answer questions. Give concise, direct, conversational answers — do NOT use structured formats like "Answer:", "Explanation:", "Key Points:", "Source:", or excessive headers and bullet points unless specifically asked. If the user asks a question not covered by the context or the history, politely say you can only answer based on the provided documents. You MAY respond to general greetings and pleasantries normally.';
+  if (base.includes('Use the provided context')) return base;
   return base + strictConstraint;
 }
 
@@ -77,7 +77,8 @@ function hybridPrompt(base, { hasRagHits }) {
     'You may receive a "Context information" section from the project knowledge base (RAG).',
     hasRagHits
       ? 'When that context is relevant, ground answers in it.'
-      : 'If the context states nothing was found, do not invent knowledge-base content.',
+      : 'If the knowledge base has no relevant data, do not invent knowledge-base content.',
+    'CRITICAL: Always use the CONVERSATION HISTORY to understand follow-up questions (e.g. if the user says "yes" or asks for "more details"). If you previously retrieved API data, use the data in the history to provide those details.',
     'When the user needs live or structured data (lists, filters such as "created today", counts), call the configured functions with sensible query parameters (e.g. ISO dates YYYY-MM-DD).',
     'Combine RAG and API results when both apply; otherwise use whichever source fits.',
     'If an API error is returned, explain briefly without fabricating records.',
