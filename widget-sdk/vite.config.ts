@@ -1,9 +1,23 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
+
+function rewriteEsToolkit() {
+  return {
+    name: 'rewrite-es-toolkit',
+    enforce: 'pre',
+    transform(code:any, id:any) {
+      if (id.includes('node_modules/recharts/') && code.includes('es-toolkit/compat/')) {
+        return code.replace(/import\s+(\w+)\s+from\s+['"]es-toolkit\/compat\/(\w+)['"];?/g, "import { $2 as $1 } from 'es-toolkit/compat';");
+      }
+    }
+  };
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), rewriteEsToolkit()],
   build: {
+    minify: false,
     lib: {
       entry: 'src/main.tsx',
       name: 'ChatWidget',
