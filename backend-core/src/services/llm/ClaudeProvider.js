@@ -22,6 +22,10 @@ class ClaudeProvider extends BaseProvider {
             system: systemPrompt,
             max_tokens: 1024,
             messages: [
+              ...(config.history || []).map(msg => ({
+                role: msg.role === 'user' ? 'user' : 'assistant',
+                content: msg.content
+              })),
               { role: "user", content: prompt }
             ]
           });

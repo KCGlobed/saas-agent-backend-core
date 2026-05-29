@@ -21,6 +21,10 @@ class OpenAIProvider extends BaseProvider {
             model: model,
             messages: [
               { role: "system", content: systemPrompt },
+              ...(config.history || []).map(msg => ({
+                role: msg.role === 'user' ? 'user' : 'assistant',
+                content: msg.content
+              })),
               { role: "user", content: prompt }
             ]
           });

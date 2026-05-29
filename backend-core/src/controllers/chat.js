@@ -98,6 +98,7 @@ exports.generateChat = async (req, res) => {
       skipRagRetrieval,
       enableRag,
       openaiApiKey,
+      history = [],
     } = req.body;
 
     const project = await Project.findById(projectId);
@@ -174,6 +175,9 @@ exports.generateChat = async (req, res) => {
       });
     }
 
+    const contextWindowSize = project.config.contextWindowSize || 15;
+    const trimmedHistory = Array.isArray(history) ? history.slice(-contextWindowSize) : [];
+
     const userMessage = buildUserMessage(prompt, contextBlock);
 
     let finalSystemPrompt;
@@ -206,6 +210,7 @@ exports.generateChat = async (req, res) => {
         model: project.config.model,
         systemPrompt: finalSystemPrompt,
         userMessage,
+        history: trimmedHistory,
         collection,
       });
     } else {
@@ -214,6 +219,7 @@ exports.generateChat = async (req, res) => {
         apiKey,
         model: project.config.model,
         prompt: userMessage,
+        history: trimmedHistory,
         systemPrompt: finalSystemPrompt,
       });
     }

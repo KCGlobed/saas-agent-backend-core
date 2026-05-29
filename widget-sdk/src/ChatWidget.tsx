@@ -1,5 +1,63 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { API_BASE_URL } from './main';
+import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+const renderChart = (config: any, key: number, primaryColor: string) => {
+  if (!config || !config.data || !config.type) return null;
+  const style = { width: '100%', height: 250, margin: '10px 0', background: 'white', padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb' };
+  
+  if (config.type === 'bar') {
+    return (
+      <div key={key} style={style}>
+        <ResponsiveContainer>
+          <BarChart data={config.data}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey={config.xKey || 'name'} tick={{fontSize: 11}} />
+            <YAxis tick={{fontSize: 11}} />
+            <RechartsTooltip contentStyle={{fontSize: 12, borderRadius: 8}} />
+            <Legend wrapperStyle={{fontSize: 12}} />
+            <Bar dataKey={config.yKey || 'value'} fill={primaryColor} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  } else if (config.type === 'pie') {
+    return (
+      <div key={key} style={style}>
+        <ResponsiveContainer>
+          <PieChart>
+            <Pie data={config.data} dataKey={config.yKey || 'value'} nameKey={config.xKey || 'name'} cx="50%" cy="50%" outerRadius={80} fill={primaryColor} label>
+              {config.data.map((entry: any, index: number) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <RechartsTooltip contentStyle={{fontSize: 12, borderRadius: 8}} />
+            <Legend wrapperStyle={{fontSize: 12}} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  } else if (config.type === 'line') {
+    return (
+      <div key={key} style={style}>
+        <ResponsiveContainer>
+          <LineChart data={config.data}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey={config.xKey || 'name'} tick={{fontSize: 11}} />
+            <YAxis tick={{fontSize: 11}} />
+            <RechartsTooltip contentStyle={{fontSize: 12, borderRadius: 8}} />
+            <Legend wrapperStyle={{fontSize: 12}} />
+            <Line type="monotone" dataKey={config.yKey || 'value'} stroke={primaryColor} strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+  return <pre key={key} style={{fontSize: '11px', background: '#f4f4f4', padding: '8px', borderRadius: '4px', overflowX: 'auto'}}>{JSON.stringify(config, null, 2)}</pre>;
+};
+
 
 const isMarkdownTableSeparator = (line: string) => {
   const t = line.trim();
@@ -22,9 +80,33 @@ const renderMarkdown = (text: string, primaryColor: string) => {
   const lines = sanitized.split('\n');
   const elements: React.ReactNode[] = [];
   let i = 0;
+  let inChartBlock = false;
+  let chartJsonStr = '';
 
   while (i < lines.length) {
     const line = lines[i];
+
+    if (line.trim().startsWith('```json chart')) {
+      inChartBlock = true;
+      i++;
+      continue;
+    }
+    if (inChartBlock) {
+      if (line.trim().startsWith('```')) {
+         inChartBlock = false;
+         try {
+           const chartConfig = JSON.parse(chartJsonStr);
+           elements.push(renderChart(chartConfig, i, primaryColor));
+         } catch(e) {
+           elements.push(<pre key={i} style={{fontSize: '11px', background: '#f4f4f4', padding: '8px', borderRadius: '4px', overflowX: 'auto'}}>{chartJsonStr}</pre>);
+         }
+         chartJsonStr = '';
+      } else {
+         chartJsonStr += line + '\n';
+      }
+      i++;
+      continue;
+    }
 
     if (line.trim() === '') {
       i++;
@@ -309,7 +391,7 @@ const ChatWidget = ({ config }: { config: any }) => {
       const res = await fetch(`${API_BASE_URL}/chat/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: config.projectId, prompt: userMsg })
+        body: JSON.stringify({ projectId: config.projectId, prompt: userMsg, history: messages })
       });
       const data = await res.json();
       const reply = data.response || data.content || 'Sorry, I could not get a response.';
@@ -475,19 +557,60 @@ const ChatWidget = ({ config }: { config: any }) => {
                   boxShadow: '0 1px 3px rgba(0,0,0,0.07)',
                   border: m.role === 'user' ? 'none' : '1px solid #e5e7eb'
                 }}>
-                  {m.isTyping ? (
-                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', padding: '2px 0' }}>
-                      {[0, 1, 2].map(d => (
-                        <span key={d} style={{
-                          width: '7px', height: '7px', borderRadius: '50%', background: '#9ca3af',
-                          animation: 'bounce 1.2s infinite', animationDelay: `${d * 0.2}s`,
-                          display: 'inline-block'
-                        }}></span>
-                      ))}
-                    </div>
-                  ) : (
-                    <div>{renderMarkdown(m.content, primaryColor)}</div>
-                  )}
+                  <div style={{ position: 'relative' }}>
+                    {m.isTyping ? (
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center', padding: '2px 0' }}>
+                        {[0, 1, 2].map(d => (
+                          <span key={d} style={{
+                            width: '7px', height: '7px', borderRadius: '50%', background: '#9ca3af',
+                            animation: 'bounce 1.2s infinite', animationDelay: `${d * 0.2}s`,
+                            display: 'inline-block'
+                          }}></span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ position: 'relative', paddingRight: m.role === 'assistant' ? '24px' : '0' }}>
+                        {renderMarkdown(m.content, primaryColor)}
+                        {m.role === 'assistant' && (
+                          <button
+                            title="Copy response"
+                            onClick={() => {
+                              navigator.clipboard.writeText(m.content);
+                              const btn = document.getElementById(`copy-btn-${i}`);
+                              if (btn) {
+                                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                                setTimeout(() => {
+                                  btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+                                }, 2000);
+                              }
+                            }}
+                            id={`copy-btn-${i}`}
+                            style={{
+                              position: 'absolute',
+                              top: '-4px',
+                              right: '-14px',
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#9ca3af',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'color 0.2s',
+                            }}
+                            onMouseOver={e => e.currentTarget.style.color = '#4b5563'}
+                            onMouseOut={e => e.currentTarget.style.color = '#9ca3af'}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

@@ -19,6 +19,7 @@ const projectSchema = new mongoose.Schema({
     leadFormFields: { type: [String], default: ['name', 'email'] },
     chunkSize: { type: Number, default: 1000 },
     chunkOverlap: { type: Number, default: 100 },
+    contextWindowSize: { type: Number, default: 5 },
     /** Optional API catalog (same shape as collection.json) for widget / server-side tool calling */
     
     apiCollection: { type: mongoose.Schema.Types.Mixed, default: null }

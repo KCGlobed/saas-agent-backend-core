@@ -5,7 +5,7 @@ const { buildOpenAITools, buildClaudeTools } = require('./toolDefinitions');
 
 const MAX_ROUNDS = 8;
 
-async function runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, collection }) {
+async function runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, history = [], collection }) {
   const client = new OpenAI({ apiKey });
   const tools = buildOpenAITools(collection);
   if (!tools.length) {
@@ -14,6 +14,10 @@ async function runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, col
 
   const messages = [
     { role: 'system', content: systemPrompt },
+    ...history.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    })),
     { role: 'user', content: userMessage },
   ];
   let totalTokens = 0;
@@ -54,14 +58,20 @@ async function runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, col
   return { response: 'Stopped after maximum tool rounds.', tokensUsed: totalTokens, toolRounds: MAX_ROUNDS };
 }
 
-async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, collection }) {
+async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, history = [], collection }) {
   const client = new Anthropic({ apiKey });
   const tools = buildClaudeTools(collection);
   if (!tools.length) {
     throw new Error('No tools defined in api collection');
   }
 
-  const messages = [{ role: 'user', content: userMessage }];
+  const messages = [
+    ...history.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    })),
+    { role: 'user', content: userMessage }
+  ];
   let totalTokens = 0;
 
   for (let round = 0; round < MAX_ROUNDS; round += 1) {
@@ -107,13 +117,13 @@ async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, col
  * @param {string} input.provider - openai | claude
  */
 async function runToolChat(input) {
-  const { provider, apiKey, model, systemPrompt, userMessage, collection } = input;
+  const { provider, apiKey, model, systemPrompt, userMessage, history, collection } = input;
   const p = (provider || '').toLowerCase();
   if (p === 'openai') {
-    return runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, collection });
+    return runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, history, collection });
   }
   if (p === 'claude') {
-    return runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, collection });
+    return runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, history, collection });
   }
   throw new Error(`Tool calling is not implemented for provider: ${provider}`);
 }

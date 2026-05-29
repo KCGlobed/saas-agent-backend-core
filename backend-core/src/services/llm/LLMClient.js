@@ -27,11 +27,11 @@ class LLMClient {
    * @param {Object} input - { provider, apiKey, model, prompt, systemPrompt }
    */
   static async generateResponse(input) {
-    const { provider, apiKey, model, prompt, systemPrompt } = input;
+    const { provider, apiKey, model, prompt, history, systemPrompt } = input;
     
     const client = this.getProvider(provider, apiKey);
     
-    return await client.generateResponse(prompt, { model, systemPrompt });
+    return await client.generateResponse(prompt, { model, systemPrompt, history });
   }
 
   /**
