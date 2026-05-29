@@ -32,6 +32,7 @@ Each object in the array MUST adhere strictly to this JSON format:
   "purpose": "CRITICAL NLP INSTRUCTIONS FOR AGENT: Write precise guidelines instructing an AI agent exactly when to invoke this tool, what implicit user intents it handles, how to map filters correctly, and how to beautifully present the output (e.g., Markdown tables, lists) for the end-user.",
   "endpoint": "The relative URL path, e.g., /api/payments",
   "method": "GET, POST, PUT, or DELETE",
+  "response_schema": "Optional. If the user provides an example of what the API returns, put that JSON or description here.",
   "query_params": {
     "param_name": {
       "type": "string, number, or boolean",

@@ -33,6 +33,9 @@ function queryParamsToJsonSchema(queryParams) {
 
 function buildApiDescription(api) {
   const bits = [api.description, api.purpose, api.when_to_use].filter((x) => x && String(x).trim());
+  if (api.response_schema && String(api.response_schema).trim()) {
+    bits.push(`EXPECTED RESPONSE SCHEMA / EXAMPLE:\n${String(api.response_schema).trim()}`);
+  }
   const text = bits.join(' ').trim();
   return text || `HTTP API: ${api.name}`;
 }
