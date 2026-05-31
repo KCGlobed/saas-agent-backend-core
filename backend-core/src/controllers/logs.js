@@ -25,7 +25,7 @@ exports.getLogs = async (req, res) => {
         .sort({ createdAt: -1 })
         .skip((page - 1) * pageSize)
         .limit(pageSize)
-        .select('query response provider model latencyMs hasRagHits toolCallsMade accuracyScore accuracyNote createdAt'),
+        .select('query response provider model latencyMs hasRagHits toolCallsMade accuracyScore accuracyNote createdAt generationSource generationDetails'),
       ChatLog.countDocuments(filter),
     ]);
 

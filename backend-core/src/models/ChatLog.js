@@ -20,9 +20,10 @@ const chatLogSchema = new mongoose.Schema({
   hasRagHits: { type: Boolean, default: false },
   citations: { type: [citationSchema], default: [] },
   toolCallsMade: { type: [toolCallSchema], default: [] },
-  // Accuracy score: 0-100 (LLM self-evaluation), or null if N/A
   accuracyScore: { type: Number, default: null },
   accuracyNote: { type: String, default: null },
+  generationSource: { type: String, default: null },
+  generationDetails: { type: mongoose.Schema.Types.Mixed, default: {} },
 }, {
   timestamps: true,
   // TTL index: logs auto-delete after 90 days. Change expireAfterSeconds to adjust.

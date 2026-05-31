@@ -277,6 +277,22 @@ exports.generateChat = async (req, res) => {
           model: project.config.model,
         });
 
+        let generationSource = 'Direct LLM';
+        let generationDetails = {};
+        
+        if (toolCallsMade && toolCallsMade.length > 0) {
+          const hasDataset = toolCallsMade.some(tc => tc.name === 'query_project_datasets');
+          if (hasDataset) {
+            generationSource = 'Dataset / SQL / Excel';
+          } else {
+            generationSource = 'API Tool Call';
+          }
+          generationDetails.toolCalls = toolCallsMade;
+        } else if (hasRagHits) {
+          generationSource = 'RAG (Knowledge Base)';
+          generationDetails.citations = citations;
+        }
+
         await ChatLog.create({
           projectId,
           query: prompt,
@@ -289,6 +305,8 @@ exports.generateChat = async (req, res) => {
           toolCallsMade,
           accuracyScore,
           accuracyNote,
+          generationSource,
+          generationDetails,
         });
       } catch (logErr) {
         console.error('[chat] Background logging failed:', logErr.message);
