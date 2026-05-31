@@ -43,6 +43,29 @@ function truncateBody(text) {
   return `${text.slice(0, MAX_TOOL_BODY_CHARS)}\n…[truncated]`;
 }
 
+function cleanJsonResponse(obj) {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'string') {
+    if (obj.length > 200 && (obj.startsWith('http') || obj.startsWith('data:') || obj.startsWith('ey'))) {
+      return obj.substring(0, 50) + '...[truncated URL/Token]';
+    }
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    // If array is too long, we might truncate it to avoid context window explosion
+    // but for now let's just clean the items
+    return obj.map(cleanJsonResponse);
+  }
+  if (typeof obj === 'object') {
+    const cleaned = {};
+    for (const [k, v] of Object.entries(obj)) {
+      cleaned[k] = cleanJsonResponse(v);
+    }
+    return cleaned;
+  }
+  return obj;
+}
+
 /**
  * Executes one catalogued API (from collection.json) server-side.
  * @param {object} collection - Parsed collection.json
@@ -101,15 +124,18 @@ async function executeApiTool(collection, toolName, toolArgs) {
     }
     if (!r.ok) {
       return truncateBody(
-        JSON.stringify({
-          error: true,
-          status: r.status,
-          statusText: r.statusText,
-          body: parsed,
-        })
+        JSON.stringify(
+          cleanJsonResponse({
+            error: true,
+            status: r.status,
+            statusText: r.statusText,
+            body: parsed,
+          })
+        )
       );
     }
-    const out = typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2);
+    const cleanedParsed = typeof parsed === 'object' ? cleanJsonResponse(parsed) : parsed;
+    const out = typeof cleanedParsed === 'string' ? cleanedParsed : JSON.stringify(cleanedParsed, null, 2);
     return truncateBody(out);
   } catch (e) {
     return JSON.stringify({ error: true, message: e.message || String(e) });

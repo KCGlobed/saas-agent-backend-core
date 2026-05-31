@@ -3,7 +3,14 @@ const mongoose = require('mongoose');
 const columnSchema = new mongoose.Schema({
   name: { type: String, required: true },
   type: { type: String, required: true },
+  nullable: { type: String, default: 'YES' }, // 'YES' | 'NO' — from information_schema
   description: { type: String, default: '' }
+}, { _id: false });
+
+const foreignKeySchema = new mongoose.Schema({
+  column: { type: String, required: true },
+  referencesTable: { type: String, required: true },
+  referencesColumn: { type: String, required: true }
 }, { _id: false });
 
 const tableSchema = new mongoose.Schema({
@@ -26,13 +33,15 @@ const tableSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     default: {}
   },
+  syncJobId: { type: String },
   syncStatus: { type: String, enum: ['pending', 'syncing', 'synced', 'error'] },
   syncProgress: { type: Number, default: 0 },
   lastSyncedAt: { type: Date },
   syncError: { type: String },
 
   rowCount: { type: Number, default: 0 },
-  columns: [columnSchema]
+  columns: [columnSchema],
+  foreignKeys: [foreignKeySchema]  // Populated from information_schema for SQL sources
 });
 
 const datasetSchema = new mongoose.Schema({
@@ -43,3 +52,4 @@ const datasetSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('Dataset', datasetSchema);
+

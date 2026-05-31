@@ -125,6 +125,38 @@ const encrypt = (plaintext) => {
   return JSON.stringify({ iv: iv.toString('hex'), data: encrypted.toString('hex'), tag: authTag.toString('hex') });
 };
 
+const decrypt = (encryptedJson) => {
+  try {
+    const parsed = JSON.parse(encryptedJson);
+    const key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
+    const iv = Buffer.from(parsed.iv, 'hex');
+    const encryptedData = Buffer.from(parsed.data, 'hex');
+    const authTag = Buffer.from(parsed.tag, 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(authTag);
+    return Buffer.concat([decipher.update(encryptedData), decipher.final()]).toString('utf8');
+  } catch {
+    // If decryption fails (e.g. already plaintext in dev), return as-is
+    return encryptedJson;
+  }
+};
+
+// Decrypts sensitive fields in sourceConfig before passing to Python
+const decryptSourceConfig = (sourceConfig, sourceType) => {
+  if (!sourceConfig || typeof sourceConfig !== 'object') return sourceConfig;
+  const cfg = { ...sourceConfig };
+  if ((sourceType === 'postgresql' || sourceType === 'mysql') && cfg.encryptedPassword) {
+    cfg.password = decrypt(cfg.encryptedPassword);
+    delete cfg.encryptedPassword;
+  }
+  if (sourceType === 'mongodb' && cfg.encryptedUri) {
+    cfg.uri = decrypt(cfg.encryptedUri);
+    delete cfg.encryptedUri;
+  }
+  return cfg;
+};
+
+
 // --- Google Sheets ---
 exports.listGoogleSheets = async (req, res) => {
   try {
@@ -222,12 +254,18 @@ exports.connectSql = async (req, res) => {
       
       dataset.tables.push({
         tableName,
-        originalFileName: `${database}.${schema}.${tableName}`,
+        originalFileName: `${database}.${schema || 'public'}.${tableName}`,
         sourceType: dialect, // 'postgresql' or 'mysql'
         queryMode,
         sourceConfig: { dialect, host, port, database, schema, tableName, username, encryptedPassword },
         rowCount: schemaResponse.data.estimatedRows || 0,
-        columns: schemaResponse.data.columns || []
+        columns: (schemaResponse.data.columns || []).map(col => ({
+          name: col.name,
+          type: col.type,
+          nullable: col.nullable || 'YES',
+          description: col.description || ''
+        })),
+        foreignKeys: schemaResponse.data.foreignKeys || []
       });
     }
     
@@ -396,3 +434,76 @@ exports.getSyncStatus = async (req, res) => {
     res.status(500).json({ error: 'Failed to get sync status' });
   }
 };
+
+/**
+ * GET /projects/:id/datasets/:datasetId/schema
+ * Fetches the full live schema for all SQL tables in a dataset using information_schema.
+ * Merges MongoDB-stored user descriptions so they are preserved across refreshes.
+ * Saves the refreshed schema back to MongoDB.
+ */
+exports.getDbSchema = async (req, res) => {
+  try {
+    const { id: projectId, datasetId } = req.params;
+    const dataset = await Dataset.findOne({ _id: datasetId, projectId });
+    if (!dataset) return res.status(404).json({ error: 'Dataset not found' });
+
+    const updatedTables = [];
+
+    for (const table of dataset.tables) {
+      if (table.sourceType !== 'postgresql' && table.sourceType !== 'mysql') {
+        updatedTables.push(table);
+        continue;
+      }
+
+      const cfg = table.sourceConfig || {};
+      const password = cfg.encryptedPassword ? decrypt(cfg.encryptedPassword) : cfg.password;
+
+      try {
+        const schemaResponse = await axios.post(`${FASTAPI_URL}/connectors/sql/schema`, {
+          dialect: cfg.dialect || table.sourceType,
+          host: cfg.host,
+          port: cfg.port,
+          database: cfg.database,
+          schema: cfg.schema,
+          tableName: cfg.tableName || table.tableName,
+          username: cfg.username,
+          password
+        });
+
+        // Merge user-provided descriptions (from MongoDB) into the fresh schema
+        const existingColDescMap = {};
+        const existingFkMap = {};
+        for (const col of (table.columns || [])) {
+          if (col.description) existingColDescMap[col.name] = col.description;
+        }
+        const existingTableDesc = table.description || '';
+
+        const freshColumns = (schemaResponse.data.columns || []).map(col => ({
+          name: col.name,
+          type: col.type,
+          nullable: col.nullable || 'YES',
+          description: existingColDescMap[col.name] || col.description || ''
+        }));
+
+        table.columns = freshColumns;
+        table.foreignKeys = schemaResponse.data.foreignKeys || table.foreignKeys || [];
+        table.rowCount = schemaResponse.data.estimatedRows || table.rowCount;
+        table.description = existingTableDesc;
+      } catch (schemaErr) {
+        console.warn(`[getDbSchema] Could not refresh schema for ${table.tableName}:`, schemaErr.message);
+      }
+
+      updatedTables.push(table);
+    }
+
+    await dataset.save();
+    res.json(dataset);
+  } catch (error) {
+    console.error('[getDbSchema] Error:', error);
+    res.status(500).json({ error: 'Failed to fetch database schema' });
+  }
+};
+
+// Export decrypt helpers for use in other controllers (e.g. chat.js)
+exports.decryptSourceConfig = decryptSourceConfig;
+exports.decrypt = decrypt;

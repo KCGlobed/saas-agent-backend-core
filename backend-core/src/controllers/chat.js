@@ -6,6 +6,7 @@ const ApiKey = require('../models/ApiKey');
 const LLMClient = require('../services/llm/LLMClient');
 const ChatLog = require('../models/ChatLog');
 const { scoreAccuracy } = require('../services/accuracy');
+const { decryptSourceConfig } = require('./datasets');
 
 const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8001/api';
 
@@ -153,11 +154,34 @@ exports.generateChat = async (req, res) => {
       if (!collection) collection = { apis: [] };
       if (!collection.apis) collection.apis = [];
       
-      const tablesMetadata = datasets.flatMap(d => d.tables || []);
+      // Build tables metadata with:
+      // 1. Decrypted credentials (so Python can connect to live SQL/MongoDB sources)
+      // 2. Full schema: nullable, foreignKeys, user descriptions
+      const tablesMetadata = datasets.flatMap(d => (d.tables || []).map(table => {
+        const tableObj = table.toObject ? table.toObject() : { ...table };
+        // Decrypt sensitive sourceConfig fields before passing to Python
+        const decryptedConfig = decryptSourceConfig(tableObj.sourceConfig, tableObj.sourceType);
+        return {
+          tableName: tableObj.tableName,
+          description: tableObj.description || '',
+          sourceType: tableObj.sourceType,
+          queryMode: tableObj.queryMode,
+          gcsParquetPath: tableObj.gcsParquetPath,
+          rowCount: tableObj.rowCount,
+          columns: (tableObj.columns || []).map(col => ({
+            name: col.name,
+            type: col.type,
+            nullable: col.nullable || 'YES',
+            description: col.description || ''
+          })),
+          foreignKeys: tableObj.foreignKeys || [],
+          sourceConfig: decryptedConfig
+        };
+      }));
       
       collection.apis.push({
         name: 'query_project_datasets',
-        description: 'Query the user\'s uploaded datasets (Excel/CSV files) using natural language to get analytics, tables, and charts. Use this tool when the user asks questions that require joining, filtering, or aggregating data from the uploaded files.',
+        description: 'Query the user\'s connected datasets (databases, Excel/CSV files) using natural language to get analytics, tables, and charts. Use this tool when the user asks questions that require joining, filtering, or aggregating data from the connected sources.',
         method: 'POST',
         url: `${FASTAPI_URL}/datasets/query`,
         bodyParams: {

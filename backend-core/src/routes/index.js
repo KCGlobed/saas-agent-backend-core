@@ -66,6 +66,7 @@ router.get('/projects/:id/datasets', authMiddleware, datasetsController.getDatas
 router.post('/projects/:id/datasets/upload', authMiddleware, upload.array('files', 10), datasetsController.uploadDatasetFiles);
 router.put('/projects/:id/datasets/:datasetId', authMiddleware, datasetsController.updateDataset);
 router.delete('/projects/:id/datasets/:datasetId', authMiddleware, datasetsController.deleteDataset);
+router.get('/projects/:id/datasets/:datasetId/schema', authMiddleware, datasetsController.getDbSchema);
 
 // Google Auth
 const googleAuthController = require('../controllers/googleAuth');
