@@ -21,6 +21,7 @@ async function runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, his
     { role: 'user', content: userMessage },
   ];
   let totalTokens = 0;
+  const allToolCalls = [];
 
   for (let round = 0; round < MAX_ROUNDS; round += 1) {
     const response = await client.chat.completions.create({
@@ -36,10 +37,12 @@ async function runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, his
         response: msg?.content || '',
         tokensUsed: totalTokens,
         toolRounds: round,
+        toolCalls: allToolCalls,
       };
     }
     messages.push(msg);
     for (const tc of msg.tool_calls) {
+      allToolCalls.push(tc);
       const name = tc.function?.name;
       let args = {};
       try {
@@ -55,7 +58,7 @@ async function runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, his
       });
     }
   }
-  return { response: 'Stopped after maximum tool rounds.', tokensUsed: totalTokens, toolRounds: MAX_ROUNDS };
+  return { response: 'Stopped after maximum tool rounds.', tokensUsed: totalTokens, toolRounds: MAX_ROUNDS, toolCalls: allToolCalls };
 }
 
 async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, history = [], collection }) {
@@ -73,6 +76,7 @@ async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, his
     { role: 'user', content: userMessage }
   ];
   let totalTokens = 0;
+  const allToolCalls = [];
 
   for (let round = 0; round < MAX_ROUNDS; round += 1) {
     const response = await client.messages.create({
@@ -93,6 +97,7 @@ async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, his
         response: textParts.join('\n') || '',
         tokensUsed: totalTokens,
         toolRounds: round,
+        toolCalls: allToolCalls,
       };
     }
 
@@ -100,6 +105,10 @@ async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, his
 
     const toolResults = [];
     for (const tu of toolUses) {
+      allToolCalls.push({
+        name: tu.name,
+        arguments: tu.input,
+      });
       const content = await executeApiTool(collection, tu.name, tu.input || {});
       toolResults.push({
         type: 'tool_result',
@@ -109,7 +118,7 @@ async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, his
     }
     messages.push({ role: 'user', content: toolResults });
   }
-  return { response: 'Stopped after maximum tool rounds.', tokensUsed: totalTokens, toolRounds: MAX_ROUNDS };
+  return { response: 'Stopped after maximum tool rounds.', tokensUsed: totalTokens, toolRounds: MAX_ROUNDS, toolCalls: allToolCalls };
 }
 
 /**
