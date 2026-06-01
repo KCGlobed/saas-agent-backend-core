@@ -11,8 +11,39 @@ require("dotenv").config();
 
 // Configuration from .env or fallback
 const GCC_BASE_URL = process.env.GCC_BASE_URL || "https://gccwebsite-admin-backend-738131651355.asia-south1.run.app";
-const GCC_TOKEN = process.env.GCC_TOKEN || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc5MzQ4NjA3LCJpYXQiOjE3NzY3NTY2MDcsImp0aSI6IjM2NDRmYjgwZjczMjQxZTFhZWQ3NmUyZjUyNTU1ZGM1IiwidXNlcl9pZCI6IjIzOSJ9.JOOXQRrHrllDbVl5YS9aFghIfiOqahNVi0mJ7Rho-Pw";
+const GCC_TOKEN_FALLBACK = process.env.GCC_TOKEN || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc5MzQ4NjA3LCJpYXQiOjE3NzY3NTY2MDcsImp0aSI6IjM2NDRmYjgwZjczMjQxZTFhZWQ3NmUyZjUyNTU1ZGM1IiwidXNlcl9pZCI6IjIzOSJ9.JOOXQRrHrllDbVl5YS9aFghIfiOqahNVi0mJ7Rho-Pw";
 const COLLECTION_PATH = path.join(__dirname, "../../collection.json");
+
+const mongoose = require("mongoose");
+const Project = require("./models/Project");
+const { decrypt } = require("./utils/crypto");
+
+let dbConnected = false;
+async function connectDb() {
+  if (dbConnected) return;
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    dbConnected = true;
+  } catch (err) {
+    console.error("MCP: Failed to connect to MongoDB", err.message);
+  }
+}
+
+async function getActiveToken() {
+  await connectDb();
+  if (!dbConnected) {
+    return GCC_TOKEN_FALLBACK;
+  }
+  try {
+    const project = await Project.findOne().sort({ updatedAt: -1 });
+    if (project?.config?.apiCustomToken) {
+      return decrypt(project.config.apiCustomToken);
+    }
+  } catch (err) {
+    console.error("MCP: Failed to fetch dynamic token from database", err.message);
+  }
+  return GCC_TOKEN_FALLBACK;
+}
 
 // Parse Postman Collection
 const collection = JSON.parse(fs.readFileSync(COLLECTION_PATH, "utf8"));
@@ -20,13 +51,13 @@ const collection = JSON.parse(fs.readFileSync(COLLECTION_PATH, "utf8"));
 /**
  * Replaces Postman variables in strings
  */
-function resolveVariables(text) {
+function resolveVariables(text, token) {
   if (typeof text !== "string") return text;
   return text
     .replace(/{{GCC_Base_url}}/g, GCC_BASE_URL)
     .replace(/{{GCC_Base}}/g, GCC_BASE_URL)
-    .replace(/{{token}}/g, GCC_TOKEN)
-    .replace(/{{GCC_Token}}/g, GCC_TOKEN);
+    .replace(/{{token}}/g, token)
+    .replace(/{{GCC_Token}}/g, token);
 }
 
 /**
@@ -103,14 +134,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
  * Register Tool Execution
  */
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const activeToken = await getActiveToken();
+
   if (request.params.name === "get_total_students_today") {
     // Implement shortcut logic
     const tool = apiTools.find(t => t.name.includes("studentdata"));
     if (!tool) throw new Error("Student data tool not found");
     
-    const url = resolveVariables(tool.request.url.raw).split('?')[0]; // Base URL
+    const url = resolveVariables(tool.request.url.raw, activeToken).split('?')[0]; // Base URL
     const response = await axios.get(url, {
-      headers: { "Authorization": `Bearer ${GCC_TOKEN}` }
+      headers: { "Authorization": `Bearer ${activeToken}` }
     });
     
     const students = response.data?.data || response.data || [];
@@ -127,7 +160,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { params = {}, body = {} } = request.params.arguments || {};
   const req = tool.request;
 
-  let url = resolveVariables(req.url.raw || "");
+  let url = resolveVariables(req.url.raw || "", activeToken);
   const urlObj = new URL(url);
   Object.entries(params).forEach(([key, value]) => urlObj.searchParams.set(key, value));
   url = urlObj.toString();
@@ -139,7 +172,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       data: body,
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${GCC_TOKEN}`
+        "Authorization": `Bearer ${activeToken}`
       },
     });
 
