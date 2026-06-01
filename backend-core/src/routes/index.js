@@ -132,7 +132,8 @@ router.get('/widget/:projectId/config', async (req, res) => {
         welcomeMessage: project.config.welcomeMessage,
         poweredByText: project.config.poweredByText,
         requireLeadForm: project.config.requireLeadForm,
-        leadFormFields: project.config.leadFormFields
+        leadFormFields: project.config.leadFormFields,
+        apiTokenLocalStorageKey: project.config.apiTokenLocalStorageKey
       }
     });
   } catch (error) {

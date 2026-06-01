@@ -5,7 +5,7 @@ const { buildOpenAITools, buildClaudeTools } = require('./toolDefinitions');
 
 const MAX_ROUNDS = 8;
 
-async function runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, history = [], collection }) {
+async function runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, history = [], collection, resolvedApiToken }) {
   const client = new OpenAI({ apiKey });
   const tools = buildOpenAITools(collection);
   if (!tools.length) {
@@ -50,7 +50,7 @@ async function runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, his
       } catch {
         args = {};
       }
-      const content = await executeApiTool(collection, name, args);
+      const content = await executeApiTool(collection, name, args, resolvedApiToken);
       messages.push({
         role: 'tool',
         tool_call_id: tc.id,
@@ -61,7 +61,7 @@ async function runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, his
   return { response: 'Stopped after maximum tool rounds.', tokensUsed: totalTokens, toolRounds: MAX_ROUNDS, toolCalls: allToolCalls };
 }
 
-async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, history = [], collection }) {
+async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, history = [], collection, resolvedApiToken }) {
   const client = new Anthropic({ apiKey });
   const tools = buildClaudeTools(collection);
   if (!tools.length) {
@@ -109,7 +109,7 @@ async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, his
         name: tu.name,
         arguments: tu.input,
       });
-      const content = await executeApiTool(collection, tu.name, tu.input || {});
+      const content = await executeApiTool(collection, tu.name, tu.input || {}, resolvedApiToken);
       toolResults.push({
         type: 'tool_result',
         tool_use_id: tu.id,
@@ -126,13 +126,13 @@ async function runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, his
  * @param {string} input.provider - openai | claude
  */
 async function runToolChat(input) {
-  const { provider, apiKey, model, systemPrompt, userMessage, history, collection } = input;
+  const { provider, apiKey, model, systemPrompt, userMessage, history, collection, resolvedApiToken } = input;
   const p = (provider || '').toLowerCase();
   if (p === 'openai') {
-    return runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, history, collection });
+    return runOpenAIToolLoop({ apiKey, model, systemPrompt, userMessage, history, collection, resolvedApiToken });
   }
   if (p === 'claude') {
-    return runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, history, collection });
+    return runClaudeToolLoop({ apiKey, model, systemPrompt, userMessage, history, collection, resolvedApiToken });
   }
   throw new Error(`Tool calling is not implemented for provider: ${provider}`);
 }

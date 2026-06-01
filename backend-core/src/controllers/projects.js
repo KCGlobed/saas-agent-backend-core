@@ -12,6 +12,10 @@ exports.getProjects = async (req, res) => {
 exports.createProject = async (req, res) => {
   try {
     const { name, config } = req.body;
+    if (config && config.apiCustomToken && !config.apiCustomToken.includes(':')) {
+      const { encrypt } = require('../utils/crypto');
+      config.apiCustomToken = encrypt(config.apiCustomToken);
+    }
     
     const User = require('../models/User');
     const user = await User.findById(req.user.id);
@@ -35,6 +39,11 @@ exports.createProject = async (req, res) => {
 exports.updateProject = async (req, res) => {
   try {
     const { id } = req.params;
+    if (req.body.config && req.body.config.apiCustomToken && !req.body.config.apiCustomToken.includes(':')) {
+      const { encrypt } = require('../utils/crypto');
+      req.body.config.apiCustomToken = encrypt(req.body.config.apiCustomToken);
+    }
+    
     const project = await Project.findOneAndUpdate(
       { _id: id, user: req.user.id },
       { $set: req.body },

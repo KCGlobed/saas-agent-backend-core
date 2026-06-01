@@ -36227,6 +36227,11 @@
 			}]);
 			setInput("");
 			setIsLoading(true);
+			let widgetApiToken = void 0;
+			if (config.apiTokenLocalStorageKey) {
+				const stored = localStorage.getItem(config.apiTokenLocalStorageKey);
+				if (stored) widgetApiToken = stored;
+			}
 			try {
 				const data = await (await fetch(`${API_BASE_URL}/chat/generate`, {
 					method: "POST",
@@ -36234,7 +36239,8 @@
 					body: JSON.stringify({
 						projectId: config.projectId,
 						prompt: userMsg,
-						history: messages
+						history: messages,
+						widgetApiToken
 					})
 				})).json();
 				const reply = data.response || data.content || "Sorry, I could not get a response.";

@@ -72,7 +72,7 @@ function cleanJsonResponse(obj) {
  * @param {string} toolName - API `name` field
  * @param {object} toolArgs - Merged into query string (GET)
  */
-async function executeApiTool(collection, toolName, toolArgs) {
+async function executeApiTool(collection, toolName, toolArgs, resolvedApiToken) {
   const apis = collection?.apis;
   if (!Array.isArray(apis)) {
     return JSON.stringify({ error: 'Invalid api collection' });
@@ -95,10 +95,14 @@ async function executeApiTool(collection, toolName, toolArgs) {
   const fullUrl = path.startsWith('http') ? path : `${base}${path.startsWith('/') ? '' : '/'}${path}`;
 
   const headers = { Accept: 'application/json' };
-  const auth = collection.auth;
-  if (auth?.type === 'bearer' && auth.token_env) {
-    const token = buildProcessEnvMap()[auth.token_env];
-    if (token) headers.Authorization = `Bearer ${token}`;
+  if (resolvedApiToken) {
+    headers.Authorization = `Bearer ${resolvedApiToken}`;
+  } else {
+    const auth = collection.auth;
+    if (auth?.type === 'bearer' && auth.token_env) {
+      const token = buildProcessEnvMap()[auth.token_env];
+      if (token) headers.Authorization = `Bearer ${token}`;
+    }
   }
 
   const method = (api.method || 'GET').toUpperCase();

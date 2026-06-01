@@ -101,10 +101,22 @@ exports.generateChat = async (req, res) => {
       enableRag,
       openaiApiKey,
       history = [],
+      widgetApiToken,
     } = req.body;
 
     const project = await Project.findById(projectId);
     if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    // Resolve access token for API integration tools
+    let resolvedApiToken = widgetApiToken;
+    if (!resolvedApiToken && project.config?.apiCustomToken) {
+      try {
+        const { decrypt } = require('../utils/crypto');
+        resolvedApiToken = decrypt(project.config.apiCustomToken);
+      } catch (err) {
+        console.error('Failed to decrypt project apiCustomToken:', err.message);
+      }
+    }
 
     const apiKeyDoc = await ApiKey.findOne({ user: project.user, provider: project.config.provider });
     if (!apiKeyDoc) {
@@ -237,6 +249,7 @@ exports.generateChat = async (req, res) => {
         userMessage,
         history: trimmedHistory,
         collection,
+        resolvedApiToken,
       });
     } else {
       response = await LLMClient.generateResponse({

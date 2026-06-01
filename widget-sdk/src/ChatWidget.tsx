@@ -387,11 +387,22 @@ const ChatWidget = ({ config }: { config: any }) => {
     setInput('');
     setIsLoading(true);
 
+    let widgetApiToken = undefined;
+    if (config.apiTokenLocalStorageKey) {
+      const stored = localStorage.getItem(config.apiTokenLocalStorageKey);
+      if (stored) widgetApiToken = stored;
+    }
+
     try {
       const res = await fetch(`${API_BASE_URL}/chat/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: config.projectId, prompt: userMsg, history: messages })
+        body: JSON.stringify({
+          projectId: config.projectId,
+          prompt: userMsg,
+          history: messages,
+          widgetApiToken: widgetApiToken
+        })
       });
       const data = await res.json();
       const reply = data.response || data.content || 'Sorry, I could not get a response.';

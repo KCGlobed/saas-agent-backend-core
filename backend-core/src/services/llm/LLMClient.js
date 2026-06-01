@@ -38,8 +38,8 @@ class LLMClient {
    * Multi-turn tool loop (OpenAI / Claude) using HTTP APIs from collection.json.
    */
   static async generateResponseWithTools(input) {
-    const { provider, apiKey, model, systemPrompt, userMessage, history, collection } = input;
-    return runToolChat({ provider, apiKey, model, systemPrompt, userMessage, history, collection });
+    const { provider, apiKey, model, systemPrompt, userMessage, history, collection, resolvedApiToken } = input;
+    return runToolChat({ provider, apiKey, model, systemPrompt, userMessage, history, collection, resolvedApiToken });
   }
 }
 

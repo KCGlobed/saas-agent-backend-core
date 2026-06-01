@@ -22,7 +22,9 @@ const projectSchema = new mongoose.Schema({
     contextWindowSize: { type: Number, default: 5 },
     /** Optional API catalog (same shape as collection.json) for widget / server-side tool calling */
     
-    apiCollection: { type: mongoose.Schema.Types.Mixed, default: null }
+    apiCollection: { type: mongoose.Schema.Types.Mixed, default: null },
+    apiCustomToken: { type: String, default: null },
+    apiTokenLocalStorageKey: { type: String, default: null }
   }
 }, { timestamps: true });
 
