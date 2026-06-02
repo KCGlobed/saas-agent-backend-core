@@ -15,7 +15,7 @@ async function getOpenAIKey(userId) {
 
 // Helper: poll FastAPI job status and update Resource record
 async function pollAndUpdateResource(resourceId, jobId) {
-  const maxAttempts = 30;
+  const maxAttempts = 200; // Allow up to 10 minutes for large files to process
   let attempts = 0;
   const interval = setInterval(async () => {
     attempts++;
