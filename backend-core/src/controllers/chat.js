@@ -160,6 +160,19 @@ exports.generateChat = async (req, res) => {
     } else {
       collection = diskCollection ? { ...diskCollection } : { apis: [] };
     }
+
+    // Attach projectId and register the list_project_resources tool descriptor
+    collection.projectId = projectId;
+    if (!collection.apis) collection.apis = [];
+    collection.apis.push({
+      name: 'list_project_resources',
+      description: 'Get the list of all ingested files, links, and documents uploaded to the project\'s knowledge base. Use this tool when the user asks which files/documents/resources are uploaded or ingested.',
+      method: 'GET',
+      url: `/api/projects/${projectId}/resources`,
+      queryParams: {
+        projectId: { type: 'string', required: true, default: projectId }
+      }
+    });
     
     const datasets = await Dataset.find({ projectId });
     if (datasets && datasets.length > 0) {

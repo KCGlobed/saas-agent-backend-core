@@ -77,6 +77,17 @@ async function executeApiTool(collection, toolName, toolArgs, resolvedApiToken) 
   if (!Array.isArray(apis)) {
     return JSON.stringify({ error: 'Invalid api collection' });
   }
+  if (toolName === 'list_project_resources') {
+    try {
+      const Resource = require('../models/Resource');
+      const projId = toolArgs.projectId || collection.projectId;
+      const resources = await Resource.find({ projectId: projId }).select('originalName type status chunkCount createdAt');
+      return JSON.stringify(resources);
+    } catch (e) {
+      return JSON.stringify({ error: true, message: e.message });
+    }
+  }
+
   const api = apis.find((a) => a.name === toolName);
   if (!api) {
     return JSON.stringify({ error: `Unknown tool: ${toolName}` });
